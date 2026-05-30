@@ -385,14 +385,23 @@ export default function RankingVulnerabilidade({
 
                         {/* Row Action triggers */}
                         <td className="px-6 py-4.5 text-right pr-6">
-                          <div className="inline-flex gap-2">
+                          <div className="inline-flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleRowExpand(f.id);
+                              }}
+                              className="px-2.5 py-1 bg-[#000675] hover:bg-[#04044A] text-white rounded text-[10px] font-bold transition-all cursor-pointer border-0 shadow-sm"
+                            >
+                              {isExpanded ? "Fechar Dossiê" : "Ver Dossiê"}
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onSelectEdit(f);
                                 onNavigateTab("cadastro");
                               }}
-                              className="p-1.5 bg-white hover:bg-slate-100 text-slate-500 hover:text-indigo-650 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                              className="p-1.5 bg-white hover:bg-slate-100 text-slate-500 hover:text-indigo-650 rounded border border-slate-200 transition-colors cursor-pointer"
                               title="Editar registro"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
@@ -404,7 +413,7 @@ export default function RankingVulnerabilidade({
                                   onDeleteFuncao(f.id);
                                 }
                               }}
-                              className="p-1.5 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                              className="p-1.5 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded border border-slate-200 transition-colors cursor-pointer"
                               title="Excluir registro"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -420,21 +429,24 @@ export default function RankingVulnerabilidade({
                           <td colSpan={7} className="px-6 py-6 text-xs text-slate-700">
                             
                             {/* Segmented Dossiê Layout */}
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white border border-slate-200 rounded p-5 shadow-sm">
                               
                               {/* COL 1: Dossiê Geral & Sucessores */}
                               <div className="lg:col-span-4 space-y-4">
                                 <div>
-                                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                                    <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
-                                    Dossiê do Cargo
+                                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100 font-sans">
+                                    <BookOpen className="w-3.5 h-3.5 text-[#000675]" />
+                                    Dossiê da Função — União Bag
                                   </h4>
                                 </div>
-                                <div className="space-y-2">
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Processo & Setor</strong> {f.processo} ({f.setor})</p>
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Líder do Turno / Responsável</strong> {f.responsavel}</p>
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Tempo de Treinamento Técnico</strong> <span className="inline-flex items-center gap-1 font-bold text-slate-800 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]"><Clock className="w-3 h-3 text-slate-500" /> {f.tempoEstimadoFormacao}</span></p>
+                                <div className="space-y-2.5">
+                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Função Mapeada</strong> <span className="font-bold text-slate-800 text-xs">{f.funcaoCritica} ({f.idFuncao})</span></p>
+                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Setor / Departamento</strong> <span className="font-semibold text-slate-750">{f.setor}</span></p>
                                   <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Atividade Prática Crítica</strong> <span className="block leading-relaxed bg-slate-50 p-2 rounded border border-slate-150 text-[11px] font-medium">{f.atividadeTecnicaCritica}</span></p>
+                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Nível de Criticidade</strong> <span className={`font-bold inline-block px-1.5 py-0.5 rounded text-[9.5px] uppercase ${f.classificacaoFinal === 'Crítico' || f.classificacaoFinal === 'Alta' ? 'bg-rose-50 text-rose-700 border border-rose-100' : f.classificacaoFinal === 'Alto' || f.classificacaoFinal === 'Média' || f.classificacaoFinal === 'Médio' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-teal-50 text-teal-700 border border-teal-100'}`}>{f.classificacaoFinal}</span></p>
+                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Backup Status</strong> <span className="font-bold text-slate-800">{ (f as any).backupStatus || (f.existeBackup === "SIM" ? "Backup validado" : "Sem backup") }</span></p>
+                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Status de Treinamento</strong> <span className="font-bold text-slate-800">{ (f as any).trainingStatus || "Não iniciado" }</span></p>
+                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Tempo Estimado de Formação</strong> <span className="inline-flex items-center gap-1 font-mono font-bold text-slate-800 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]"><Clock className="w-3 h-3 text-slate-500" /> { (f as any).tempoEstimadoFormacaoDias ? `${(f as any).tempoEstimadoFormacaoDias} dias` : f.tempoEstimadoFormacao }</span></p>
                                   <div>
                                     <strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block mb-1">Competências Requeridas</strong>
                                     <div className="flex flex-wrap gap-1">
@@ -443,40 +455,44 @@ export default function RankingVulnerabilidade({
                                       )) : <span className="text-slate-400 italic">Nenhum requisito cadastrado</span>}
                                     </div>
                                   </div>
-                                </div>
-                              </div>
-
-                              {/* COL 2: Métricas de Competência & Alertas */}
+                                              {/* COL 2: Métricas, Risco & Evidências ISO */}
                               <div className="lg:col-span-4 space-y-4 border-t lg:border-t-0 lg:border-l lg:border-r border-slate-200 lg:px-6">
                                 <div>
-                                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                                    <TrendingUp className="w-3.5 h-3.5 text-teal-650" />
-                                    Métricas de Cobertura
+                                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100 font-sans">
+                                    <TrendingUp className="w-3.5 h-3.5 text-[#000675]" />
+                                    Risco, ISO & Evidências
                                   </h4>
                                 </div>
+                                <div className="space-y-3">
+                                  <div className="bg-slate-50 p-3 border border-slate-200 rounded flex items-center justify-between">
+                                    <div>
+                                      <span className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Risk Score (Vulnerabilidade)</span>
+                                      <span className="block text-xs font-mono font-bold mt-1 text-slate-400">Escala de 0 a 100</span>
+                                    </div>
+                                    <span className={`text-xl font-mono font-bold ${f.scoreVulnerabilidade >= 60 ? 'text-rose-600' : f.scoreVulnerabilidade >= 20 ? 'text-amber-600' : 'text-teal-600'}`}>
+                                      {f.scoreVulnerabilidade}.00
+                                    </span>
+                                  </div>
 
-                                {/* Live calculated scores display */}
-                                <div className="grid grid-cols-2 gap-3.5">
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-inner flex flex-col justify-between">
-                                    <span className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Maturidade do Cargo</span>
-                                    <span className={`block font-mono text-xl font-black mt-1 ${isLowMaturity ? 'text-rose-600' : stats.mat < 75 ? 'text-amber-600' : 'text-teal-600'}`}>{stats.mat}%</span>
-                                    <span className="block text-[8px] text-slate-400 font-bold mt-1 uppercase">Ponderado RJT</span>
+                                  <div className="bg-slate-50 p-3 border border-slate-200 rounded flex items-center justify-between">
+                                    <div>
+                                      <span className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Relação ISO 9001:2015</span>
+                                      <span className="block text-xs font-bold mt-1 text-slate-700">Cláusula {f.requisitoISO}</span>
+                                    </div>
                                   </div>
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-inner flex flex-col justify-between">
-                                    <span className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Backup Redundância</span>
-                                    <span className={`block font-mono text-xl font-black mt-1 ${stats.bkp === 0 ? 'text-rose-600' : stats.bkp < 100 ? 'text-amber-600' : 'text-teal-600'}`}>{stats.bkp}%</span>
-                                    <span className="block text-[8px] text-slate-400 font-bold mt-1 uppercase">Backup 1 & 2</span>
+
+                                  <div className="bg-slate-50 p-3 border border-slate-200 rounded space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Evidência Requerida</span>
+                                      <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${ (f as any).evidenciaStatus === "Validada" ? "bg-teal-50 text-teal-700 border border-teal-100" : (f as any).evidenciaStatus === "Parcial" ? "bg-amber-50 text-amber-700 border border-amber-100" : "bg-rose-50 text-rose-700 border border-rose-100" }`}>
+                                        { (f as any).evidenciaStatus || "Pendente" }
+                                      </span>
+                                    </div>
+                                    <span className="block text-[11px] font-medium leading-relaxed text-slate-600 pt-0.5">
+                                      {f.evidenciaNecessaria || "Ficha de polivalência técnica homologada no SGQ"}
+                                    </span>
                                   </div>
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-inner flex flex-col justify-between">
-                                    <span className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Cobertura Geral</span>
-                                    <span className={`block font-mono text-xl font-black mt-1 ${stats.cov < 50 ? 'text-rose-600' : stats.cov < 100 ? 'text-amber-600' : 'text-teal-600'}`}>{stats.cov}%</span>
-                                    <span className="block text-[8px] text-slate-400 font-bold mt-1 uppercase">Pessoas Aptas</span>
-                                  </div>
-                                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-inner flex flex-col justify-between">
-                                    <span className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Skills do Operador</span>
-                                    <span className={`block font-mono text-xl font-black mt-1 ${stats.trn < 50 ? 'text-rose-600' : stats.trn < 75 ? 'text-amber-600' : 'text-teal-600'}`}>{stats.trn}%</span>
-                                    <span className="block text-[8px] text-slate-400 font-bold mt-1 uppercase">Polivalência N{f.nivelPolivalencia}</span>
-                                  </div>
+                                </div>                     </div>
                                 </div>
 
                                 {/* Active HR succession alerts */}

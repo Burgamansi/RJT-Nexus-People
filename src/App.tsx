@@ -17,6 +17,7 @@ import {
   calculateVulnerability,
   getFinalClassification
 } from "./types";
+import { UBG_FUNCTIONS } from "./data/ubgFunctions";
 
 export default function App() {
   // Navigation states - Default inWorkspace to true
@@ -25,7 +26,13 @@ export default function App() {
   // State entities loaded with fallback seed data
   const [funcoes, setFuncoes] = useState<FuncaoCritica[]>(() => {
     const saved = localStorage.getItem("ubg_funcoes_criticas");
-    return saved ? JSON.parse(saved) : INITIAL_FUNCOES;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.length === 18 && parsed.some((p: any) => p.idFuncao.startsWith("UBG-"))) {
+        return parsed;
+      }
+    }
+    return UBG_FUNCTIONS;
   });
 
   const [acoes, setAcoes] = useState<ActionPlan[]>(() => {
