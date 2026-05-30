@@ -1,0 +1,6 @@
+{
+  "name": "UBG Analytics Hub",
+  "description": "Assessment of critical functions, vulnerability diagnostics, and action plan tracking aligned with ISO 9001:2015 for União Bag.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
