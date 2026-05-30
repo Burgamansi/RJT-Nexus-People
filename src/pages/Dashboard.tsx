@@ -456,11 +456,11 @@ export default function Dashboard({ funcoes, acoes, onNavigateTab }: DashboardPr
       {/* HIGHEST VULNERABILITY ALERT SECTION */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Highest vulnerability list */}
+        {/* Highest vulnerability list - Operational Watchlist */}
         <div className="bg-white border border-slate-200 p-6 rounded space-y-4">
           <div className="flex justify-between items-center border-b border-slate-100 pb-3">
             <div>
-              <h4 className="font-bold text-[#04044A] text-xs uppercase tracking-wider">Fichas de Exposição Crítica</h4>
+              <h4 className="font-bold text-[#04044A] text-xs uppercase tracking-wider">Operational Watchlist</h4>
               <p className="text-[10px] text-slate-450">Cargos prioritários de sucessão por menor maturidade de equipe</p>
             </div>
             <button 
@@ -502,11 +502,11 @@ export default function Dashboard({ funcoes, acoes, onNavigateTab }: DashboardPr
           </div>
         </div>
 
-        {/* PDCA / Action Plan quick view */}
+        {/* PDCA / Action Plan quick view - Executive Alert Center */}
         <div className="bg-white border border-slate-200 p-6 rounded space-y-4">
           <div className="flex justify-between items-center border-b border-slate-100 pb-3">
             <div>
-              <h4 className="font-bold text-[#04044A] text-xs uppercase tracking-wider">Ações Corretivas PDCA</h4>
+              <h4 className="font-bold text-[#04044A] text-xs uppercase tracking-wider">Executive Alert Center</h4>
               <p className="text-[10px] text-slate-450">Ações de mitigação de vulnerabilidade humana mapeadas</p>
             </div>
             <button 
