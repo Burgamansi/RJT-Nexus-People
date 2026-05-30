@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Home from "./pages/Home";
 import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import CadastroFuncoes from "./pages/CadastroFuncoes";
@@ -20,8 +19,7 @@ import {
 } from "./types";
 
 export default function App() {
-  // Navigation states
-  const [inWorkspace, setInWorkspace] = useState(false);
+  // Navigation states - Default inWorkspace to true
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // State entities loaded with fallback seed data
@@ -155,106 +153,93 @@ export default function App() {
   // Navigation and stats definitions
   const totalFuncoesCount = funcoes.length;
   const criticalCount = funcoes.filter(f => f.classificacaoFinal === "Crítico").length;
-  const bkpCount = funcoes.filter(f => f.existeBackup === "SIM").length;
-  const coveragePercent = totalFuncoesCount > 0 ? Math.round((bkpCount / totalFuncoesCount) * 100) : 0;
 
   return (
-    <div className="bg-slate-50 min-h-screen font-sans">
-      
-      {/* Visual Workspace Router rendering */}
-      {!inWorkspace ? (
-        <Home 
-          onEnterApp={() => setInWorkspace(true)} 
-          funcoesCount={totalFuncoesCount}
-          criticalCount={criticalCount}
-          coveragePercent={coveragePercent}
-        />
-      ) : (
-        <DashboardLayout
-          activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setActiveTab(tab);
-            // Cancel editing mode when leaving cadastro tab
-            if (tab !== "cadastro") {
-              setEditFuncNode(null);
-            }
-          }}
-          onExitWorkspace={() => setInWorkspace(false)}
-          userEmail="kaikoko9@gmail.com"
-          criticalCount={criticalCount}
-        >
-          
-          {/* Active view component projection */}
-          {activeTab === "dashboard" && (
-            <Dashboard 
-              funcoes={funcoes} 
-              acoes={acoes} 
-              onNavigateTab={(tab) => {
-                setActiveTab(tab);
-                if (tab !== "cadastro") setEditFuncNode(null);
-              }} 
-            />
-          )}
+    <div className="bg-[#F8FAFC] min-h-screen font-sans antialiased text-[#04044A]">
+      <DashboardLayout
+        activeTab={activeTab}
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          // Cancel editing mode when leaving cadastro tab
+          if (tab !== "cadastro") {
+            setEditFuncNode(null);
+          }
+        }}
+        onExitWorkspace={() => {}}
+        userEmail="kaikoko9@gmail.com"
+        criticalCount={criticalCount}
+      >
+        
+        {/* Active view component projection */}
+        {activeTab === "dashboard" && (
+          <Dashboard 
+            funcoes={funcoes} 
+            acoes={acoes} 
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              if (tab !== "cadastro") setEditFuncNode(null);
+            }} 
+          />
+        )}
 
-          {activeTab === "cadastro" && (
-            <CadastroFuncoes
-              funcoes={funcoes}
-              onAddFuncao={handleAddFuncao}
-              onUpdateFuncao={handleUpdateFuncao}
-              editFuncNode={editFuncNode}
-              clearEditNode={() => setEditFuncNode(null)}
-            />
-          )}
+        {activeTab === "cadastro" && (
+          <CadastroFuncoes
+            funcoes={funcoes}
+            onAddFuncao={handleAddFuncao}
+            onUpdateFuncao={handleUpdateFuncao}
+            editFuncNode={editFuncNode}
+            clearEditNode={() => setEditFuncNode(null)}
+          />
+        )}
 
-          {activeTab === "ranking" && (
-            <RankingVulnerabilidade
-              funcoes={funcoes}
-              acoes={acoes}
-              evidencias={evidencias}
-              onDeleteFuncao={handleDeleteFuncao}
-              onSelectEdit={handleSelectEdit}
-              onUpdateAcaoStatus={handleUpdateAcaoStatus}
-              onUpdateEvidenciaStatus={handleUpdateEvidenciaStatus}
-              onNavigateTab={(tab) => {
-                setActiveTab(tab);
-                if (tab !== "cadastro") setEditFuncNode(null);
-              }}
-            />
-          )}
+        {activeTab === "ranking" && (
+          <RankingVulnerabilidade
+            funcoes={funcoes}
+            acoes={acoes}
+            evidencias={evidencias}
+            onDeleteFuncao={handleDeleteFuncao}
+            onSelectEdit={handleSelectEdit}
+            onUpdateAcaoStatus={handleUpdateAcaoStatus}
+            onUpdateEvidenciaStatus={handleUpdateEvidenciaStatus}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              if (tab !== "cadastro") setEditFuncNode(null);
+            }}
+          />
+        )}
 
-          {activeTab === "plano" && (
-            <PlanoAcao
-              acoes={acoes}
-              funcoes={funcoes}
-              onAddAcao={handleAddAcao}
-              onUpdateAcaoStatus={handleUpdateAcaoStatus}
-            />
-          )}
+        {activeTab === "plano" && (
+          <PlanoAcao
+            acoes={acoes}
+            funcoes={funcoes}
+            onAddAcao={handleAddAcao}
+            onUpdateAcaoStatus={handleUpdateAcaoStatus}
+          />
+        )}
 
-          {activeTab === "iso" && (
-            <EvidenciasISO
-              evidencias={evidencias}
-              onAddEvidencia={handleAddEvidencia}
-              onUpdateEvidenciaStatus={handleUpdateEvidenciaStatus}
-            />
-          )}
+        {activeTab === "iso" && (
+          <EvidenciasISO
+            evidencias={evidencias}
+            onAddEvidencia={handleAddEvidencia}
+            onUpdateEvidenciaStatus={handleUpdateEvidenciaStatus}
+          />
+        )}
 
-        </DashboardLayout>
-      )}
+      </DashboardLayout>
 
       {/* RICH LIGHTWEIGHT SYSTEM TOASTS OVERLAY */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-55 flex items-center gap-3 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-white shadow-xl max-w-sm animate-slide-up border select-none bg-slate-900 border-slate-800">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-md text-xs font-semibold text-white shadow-lg max-w-sm animate-slide-up border select-none bg-[#04044A] border-slate-700">
           <div className="flex gap-2">
             <span className={`w-2 h-2 rounded-full block shrink-0 mt-1 ${
               toast.type === "success" 
-                ? "bg-[#70AD47]" 
+                ? "bg-[#00E7F8]" 
                 : toast.type === "danger" 
                 ? "bg-rose-500" 
-                : "bg-blue-400"
+                : "bg-[#00A4FF]"
             }`}></span>
             <div>
-              <p className="font-mono text-[9px] text-indigo-500 uppercase tracking-wider leading-none">RJT NEXUS Intelligence</p>
+              <p className="font-mono text-[9px] text-[#00E7F8] uppercase tracking-wider leading-none">RJT NEXUS Intelligence</p>
               <p className="text-slate-350 mt-1 leading-snug">{toast.message}</p>
             </div>
           </div>
