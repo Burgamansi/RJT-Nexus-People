@@ -83,6 +83,12 @@ export default function Dashboard({ funcoes, acoes, onNavigateTab }: DashboardPr
     .sort((a, b) => a.maturityScore - b.maturityScore)
     .slice(0, 5);
 
+  // Actions status tracker (Safely derived from PDCA/action data)
+  const totalAcoes = acoes ? acoes.length : 0;
+  const acoesConcluidas = acoes ? acoes.filter(a => a.status === "Concluido" || a.status === "Concluído").length : 0;
+  const acoesEmExecucao = acoes ? acoes.filter(a => a.status === "Em Execução").length : 0;
+  const acoesPercent = totalAcoes > 0 ? Math.round((acoesConcluidas / totalAcoes) * 100) : 0;
+
   // Departments for the new heatmap
   const UBG_DEPARTMENTS = [
     "Produção – Corte",
