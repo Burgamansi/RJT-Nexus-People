@@ -1,6 +1,4 @@
-import React, { useMemo, useState } from "react";
-import { ImportType } from "../features/import-center/types";
-import { DefaultXLSXAdapter, parseCSV } from "../features/import-center/index";
+import React, { useState, useMemo } from "react";
 import {
   AlertTriangle,
   Briefcase,
@@ -10,134 +8,137 @@ import {
   Layers,
   Repeat2,
   Shield,
-  Zap
+  Zap,
+  Download,
+  AlertCircle,
+  Info,
 } from "lucide-react";
-import { buildPeopleIntelligenceFromRHRows, RHSpreadsheetImportResult } from "../features/import-center/rhSpreadsheetEngine";
-import { saveImportedPeopleDataset } from "../app/data/peopleDatasetStore";
-import { usePeopleDataset } from "../app/data/usePeopleDataset";
-import { Priority } from "../shared/domain/people/enums";
-
+import { RJT_COLORS } from "../styles/rjtColors";
+import { validateAndImportData, generateImportReport, ImportValidationResult } from "../services/robustImportService";
 import { ImportDropzone } from "../components/import-center/ImportDropzone";
-import { ImportValidationPanel } from "../components/import-center/ImportValidationPanel";
-import { ImportPreviewTable } from "../components/import-center/ImportPreviewTable";
+import * as XLSX from 'xlsx';
 
 interface ImportCenterPageProps {
   onNavigate?: (tab: string) => void;
 }
 
-const WORK_PRODUCT_ROUTES: Record<string, string> = {
-  workforce_map: "workforce-map",
-  critical_functions_ranking: "critical-functions",
-  backup_matrix: "backup-succession",
-  succession_plan: "backup-succession",
-  training_ojt_plan: "training-ojt",
-  evidence_center: "evidence-center",
-  pdca_action_plan: "action-plans",
-  executive_dashboard: "dashboard",
-};
-
-const WORK_PRODUCT_TITLES: Record<string, string> = {
-  workforce_map: "Mapa da Forca de Trabalho",
-  critical_functions_ranking: "Ranking de Funcoes Criticas",
-  backup_matrix: "Matriz de Backup",
-  succession_plan: "Plano de Sucessao",
-  training_ojt_plan: "Plano de Treinamento e OJT",
-  evidence_center: "Central de Evidencias",
-  pdca_action_plan: "Plano de Acao PDCA",
-  executive_dashboard: "Dashboard Executivo",
-};
-
-const getProcessName = (description: string) => {
-  const [processName] = description.split(". Impacto SGQ:");
-  return processName?.trim() || "Processo nao informado";
-};
-
 export const ImportCenterPage: React.FC<ImportCenterPageProps> = ({ onNavigate }) => {
   const [selectedTenant, setSelectedTenant] = useState<string>("tenant_ubg");
-  const [importType] = useState<ImportType>("employee");
-  const [rhResult, setRhResult] = useState<RHSpreadsheetImportResult | null>(null);
-  const { tenants } = usePeopleDataset();
+  const [importResult, setImportResult] = useState<ImportValidationResult | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [fileName, setFileName] = useState<string>("");
 
-  const publishResult = (intelligenceResult: RHSpreadsheetImportResult) => {
-    setRhResult(intelligenceResult);
-    if (intelligenceResult.errors.filter(error => error.isCritical).length === 0) {
-      saveImportedPeopleDataset(intelligenceResult.dataset);
+  const tenants = [
+    { id: "tenant_ubg", name: "UNIÃO BAG - Empresa Oficial" },
+    { id: "tenant_demo", name: "Demo Tenant (Testes)" },
+  ];
+
+  const handleWorkbookLoaded = async (name: string, buffer: ArrayBuffer) => {
+    setIsProcessing(true);
+    setFileName(name);
+    
+    try {
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const result = validateAndImportData(workbook);
+      setImportResult(result);
+
+      // Log para debug
+      console.log("Import Result:", result);
+    } catch (error) {
+      setImportResult({
+        success: false,
+        totalRows: 0,
+        validRows: 0,
+        invalidRows: 0,
+        errors: [`Erro ao processar arquivo: ${String(error)}`],
+        warnings: [],
+        data: [],
+        stats: {
+          totalFunctions: 0,
+          sectors: 0,
+          processes: 0,
+          criticalFunctions: 0,
+          totalBackupsRecommended: 0,
+          functionsByStatus: {},
+          functionsByCriticality: {},
+        },
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleDataLoaded = (text: string) => {
-    const delimiter = text.includes(";") ? ";" : ",";
-    const rawRows = parseCSV(text, delimiter as "," | ";");
-    publishResult(buildPeopleIntelligenceFromRHRows(rawRows, {
-      tenantId: selectedTenant,
-      tenantName: tenants.find(t => t.id === selectedTenant)?.name,
-      sourceName: "Importacao CSV RH/PDCA"
-    }));
+  const handleDownloadReport = () => {
+    if (!importResult) return;
+
+    const report = generateImportReport(importResult);
+    const element = document.createElement("a");
+    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(report));
+    element.setAttribute("download", `relatorio_importacao_${new Date().toISOString().split('T')[0]}.txt`);
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
-  const handleWorkbookLoaded = (fileName: string, buffer: ArrayBuffer) => {
-    const adapter = new DefaultXLSXAdapter();
-    const rawRows = adapter.parseWorkbook(buffer);
-    publishResult(buildPeopleIntelligenceFromRHRows(rawRows, {
-      tenantId: selectedTenant,
-      tenantName: tenants.find(t => t.id === selectedTenant)?.name,
-      sourceName: fileName,
-      parseMetadata: adapter.getLastParseMetadata()
-    }));
+  const handleExportData = () => {
+    if (!importResult || !importResult.data.length) return;
+
+    const ws = XLSX.utils.json_to_sheet(importResult.data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "CATALOGO_IMPORTADO");
+    XLSX.writeFile(wb, `catalogo_importado_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const summary = useMemo(() => {
-    if (!rhResult) return null;
-
-    const functions = rhResult.dataset.functions;
-    const assessments = rhResult.dataset.assessments;
-    const processes = new Set(functions.map(func => getProcessName(func.description)));
-    const criticality = {
-      criticas: assessments.filter(item => item.classification === Priority.CRITICAL).length,
-      altas: assessments.filter(item => item.classification === Priority.HIGH).length,
-      medias: assessments.filter(item => item.classification === Priority.MEDIUM).length,
-      baixas: assessments.filter(item => item.classification === Priority.LOW).length,
-    };
+    if (!importResult) return null;
 
     return {
-      functions: functions.length,
-      sectors: rhResult.dataset.units.length,
-      processes: processes.size,
-      criticality,
-      backups: functions.reduce((sum, item) => sum + item.requiredBackupQuantity, 0),
-      trainings: rhResult.dataset.programs.length + rhResult.dataset.ojts.length,
+      totalFunctions: importResult.stats.totalFunctions,
+      sectors: importResult.stats.sectors,
+      processes: importResult.stats.processes,
+      criticalFunctions: importResult.stats.criticalFunctions,
+      totalBackups: importResult.stats.totalBackupsRecommended,
+      criticality: importResult.stats.functionsByCriticality,
+      status: importResult.stats.functionsByStatus,
     };
-  }, [rhResult]);
+  }, [importResult]);
 
-  const hasCriticalErrors = rhResult?.errors.some(error => error.isCritical) ?? false;
+  const hasCriticalErrors = importResult?.errors.length ?? 0 > 0;
+  const isValid = importResult?.success ?? false;
 
   return (
-    <div className="space-y-7">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+    <div className="space-y-7 p-6" style={{ backgroundColor: RJT_COLORS.neutral.lightGray }}>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-2 pb-5" style={{ borderColor: RJT_COLORS.primary.cyan }}>
         <div className="space-y-1">
-          <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full uppercase border border-emerald-500/20 select-none">
-            Motor RH/PDCA Inteligente
+          <span 
+            className="text-[10px] font-mono font-bold tracking-widest px-2.5 py-1 rounded-full uppercase border select-none inline-block"
+            style={{ backgroundColor: RJT_COLORS.primary.lightBlue, color: RJT_COLORS.primary.darkNavy, borderColor: RJT_COLORS.primary.cyan }}
+          >
+            ✓ Motor de Importação Robusto
           </span>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight pt-2">
-            Centro de Importacao
+          <h1 className="text-3xl font-extrabold tracking-tight pt-2" style={{ color: RJT_COLORS.primary.darkNavy }}>
+            Centro de Importação
           </h1>
-          <p className="text-xs text-slate-400 max-w-3xl">
-            Importe a planilha de RH para gerar mapa da forca de trabalho, criticidade, backups, sucessao, treinamentos, evidencias, plano PDCA e dashboard executivo.
+          <p className="text-sm max-w-3xl" style={{ color: RJT_COLORS.neutral.mediumGray }}>
+            Importe o CATALOGO_MESTRE oficial da UNIÃO BAG para validar 71 funções, 17 setores, 34 processos e 25 funções críticas.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-900/80 px-3.5 py-2 rounded-lg border border-slate-800 shrink-0">
-          <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg border shrink-0" style={{ backgroundColor: RJT_COLORS.primary.lightBlue, borderColor: RJT_COLORS.primary.cyan }}>
+          <Shield className="w-4 h-4 shrink-0" style={{ color: RJT_COLORS.primary.darkNavy }} />
           <select
             value={selectedTenant}
             onChange={(e) => {
               setSelectedTenant(e.target.value);
-              setRhResult(null);
+              setImportResult(null);
             }}
-            className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer pr-4"
+            className="bg-transparent text-xs font-bold focus:outline-none cursor-pointer pr-4"
+            style={{ color: RJT_COLORS.primary.darkNavy }}
           >
             {tenants.map((t) => (
-              <option key={t.id} value={t.id} className="bg-[#020224] text-white text-xs font-semibold">
+              <option key={t.id} value={t.id} style={{ color: RJT_COLORS.primary.darkNavy }}>
                 {t.name}
               </option>
             ))}
@@ -145,99 +146,197 @@ export const ImportCenterPage: React.FC<ImportCenterPageProps> = ({ onNavigate }
         </div>
       </div>
 
+      {/* Upload Area */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-5">
-        <ImportDropzone importType={importType} onDataLoaded={handleDataLoaded} onWorkbookLoaded={handleWorkbookLoaded} />
+        <ImportDropzone 
+          importType="employee" 
+          onDataLoaded={() => {}} 
+          onWorkbookLoaded={handleWorkbookLoaded}
+          isProcessing={isProcessing}
+        />
 
-        <div className="rounded-lg border border-slate-800 bg-white/[0.03] p-4">
+        {/* Info Panel */}
+        <div className="rounded-lg border-2 p-4" style={{ backgroundColor: RJT_COLORS.neutral.white, borderColor: RJT_COLORS.primary.cyan }}>
           <div className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-emerald-400" />
-            <h2 className="text-xs font-bold text-white uppercase font-mono">Resumo da importacao</h2>
+            <Database className="w-4 h-4 shrink-0" style={{ color: RJT_COLORS.primary.darkNavy }} />
+            <h2 className="text-xs font-bold uppercase font-mono" style={{ color: RJT_COLORS.primary.darkNavy }}>Status da Importação</h2>
           </div>
-          <div className="mt-3 space-y-2 text-[11px] text-slate-500">
-            <p>Tenant: <strong className="text-white">{tenants.find(t => t.id === selectedTenant)?.name}</strong></p>
-            <p>Status: <strong className={hasCriticalErrors ? "text-rose-500" : "text-emerald-600"}>
-              {rhResult ? (hasCriticalErrors ? "bloqueada por erros" : "dataset publicado") : "aguardando arquivo"}
-            </strong></p>
-            {rhResult?.parseMetadata && (
-              <p>
-                Aba usada: <strong className="text-white">{rhResult.parseMetadata.sheetName}</strong> | cabecalho linha {rhResult.parseMetadata.headerRowNumber}
-              </p>
-            )}
+          <div className="mt-3 space-y-2 text-[11px]">
+            <p style={{ color: RJT_COLORS.neutral.mediumGray }}>
+              Tenant: <strong style={{ color: RJT_COLORS.primary.darkNavy }}>
+                {tenants.find(t => t.id === selectedTenant)?.name}
+              </strong>
+            </p>
+            <p style={{ color: RJT_COLORS.neutral.mediumGray }}>
+              Arquivo: <strong style={{ color: RJT_COLORS.primary.darkNavy }}>
+                {fileName || "Aguardando..."}
+              </strong>
+            </p>
+            <p style={{ color: RJT_COLORS.neutral.mediumGray }}>
+              Status: <strong style={{ 
+                color: isValid ? RJT_COLORS.status.success : (importResult ? RJT_COLORS.status.error : RJT_COLORS.neutral.mediumGray)
+              }}>
+                {!importResult ? "Aguardando arquivo" : (isValid ? "✓ Validado" : "✗ Erro")}
+              </strong>
+            </p>
           </div>
         </div>
       </div>
 
+      {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           {[
-            { label: "Funcoes", value: summary.functions, icon: <Briefcase className="w-4 h-4" />, route: "workforce-map" },
-            { label: "Setores", value: summary.sectors, icon: <Layers className="w-4 h-4" />, route: "workforce-map" },
-            { label: "Processos", value: summary.processes, icon: <Zap className="w-4 h-4" />, route: "critical-functions" },
-            { label: "Criticidade", value: `${summary.criticality.criticas}/${summary.criticality.altas}/${summary.criticality.medias}/${summary.criticality.baixas}`, icon: <AlertTriangle className="w-4 h-4" />, route: "critical-functions" },
-            { label: "Backups", value: summary.backups, icon: <Repeat2 className="w-4 h-4" />, route: "backup-succession" },
-            { label: "Treinamentos", value: summary.trainings, icon: <GraduationCap className="w-4 h-4" />, route: "training-ojt" },
-          ].map(item => (
-            <button
+            { label: "Funções", value: summary.totalFunctions, icon: <Briefcase className="w-4 h-4" /> },
+            { label: "Setores", value: summary.sectors, icon: <Layers className="w-4 h-4" /> },
+            { label: "Processos", value: summary.processes, icon: <Zap className="w-4 h-4" /> },
+            { label: "Críticas", value: summary.criticalFunctions, icon: <AlertTriangle className="w-4 h-4" /> },
+            { label: "Backups", value: summary.totalBackups, icon: <Repeat2 className="w-4 h-4" /> },
+            { label: "Status", value: isValid ? "✓ OK" : "✗ Erro", icon: <CheckCircle2 className="w-4 h-4" /> },
+          ].map((item) => (
+            <div
               key={item.label}
-              type="button"
-              onClick={() => onNavigate?.(item.route)}
-              className="rounded-lg border border-slate-800 bg-white/[0.03] p-4 text-left transition-all hover:border-blue-200 hover:shadow-[0_12px_28px_rgba(15,23,42,0.08)]"
+              className="rounded-lg border-2 p-4 text-left"
+              style={{ 
+                backgroundColor: RJT_COLORS.neutral.white,
+                borderColor: RJT_COLORS.primary.cyan,
+              }}
             >
-              <div className="flex items-center justify-between gap-2 text-blue-700">
+              <div className="flex items-center justify-between gap-2" style={{ color: RJT_COLORS.primary.darkNavy }}>
                 {item.icon}
-                <span className="text-[10px] font-mono uppercase text-slate-500">{item.label}</span>
+                <span className="text-[10px] font-mono uppercase" style={{ color: RJT_COLORS.neutral.mediumGray }}>
+                  {item.label}
+                </span>
               </div>
-              <p className="mt-3 text-2xl font-extrabold leading-tight text-white">{item.value}</p>
-            </button>
+              <p className="mt-3 text-2xl font-extrabold leading-tight" style={{ color: RJT_COLORS.primary.darkNavy }}>
+                {item.value}
+              </p>
+            </div>
           ))}
         </div>
       )}
 
-      {rhResult && (
-        <div className="space-y-6 animate-fade-in pt-2">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      {/* Validation Results */}
+      {importResult && (
+        <div className="space-y-6 pt-2">
+          {/* Status Banner */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-lg border-2 p-4" 
+            style={{ 
+              backgroundColor: isValid ? RJT_COLORS.status.success + "10" : RJT_COLORS.status.error + "10",
+              borderColor: isValid ? RJT_COLORS.status.success : RJT_COLORS.status.error,
+            }}>
             <div>
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono border-l-[3px] border-emerald-500 pl-2.5">
-                Saida da transformacao RH
+              <h3 className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: RJT_COLORS.primary.darkNavy }}>
+                Resultado da Validação
               </h3>
-              <p className="text-[11px] text-slate-500 mt-2">
-                Fonte: {rhResult.sourceName} | {rhResult.successCount}/{rhResult.processedCount} linhas validas | tenant {rhResult.tenantId}
+              <p className="text-[11px] mt-2" style={{ color: RJT_COLORS.neutral.mediumGray }}>
+                {importResult.validRows} de {importResult.totalRows} linhas processadas com sucesso
               </p>
             </div>
-            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-bold uppercase border ${
-              hasCriticalErrors
-                ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
-                : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-            }`}>
-              {hasCriticalErrors ? <AlertTriangle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-              {hasCriticalErrors ? "validacao bloqueada" : "dataset publicado"}
+            <span 
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-bold uppercase border"
+              style={{ 
+                backgroundColor: isValid ? RJT_COLORS.status.success + "20" : RJT_COLORS.status.error + "20",
+                borderColor: isValid ? RJT_COLORS.status.success : RJT_COLORS.status.error,
+                color: isValid ? RJT_COLORS.status.success : RJT_COLORS.status.error,
+              }}
+            >
+              {isValid ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+              {isValid ? "Validado com Sucesso" : "Erros Detectados"}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {rhResult.workProducts.map(product => (
-              <button
-                key={product.id}
-                type="button"
-                onClick={() => onNavigate?.(WORK_PRODUCT_ROUTES[product.id] ?? "intelligence")}
-                className="bg-white/[0.03] border border-slate-800 rounded-lg p-5 text-left transition-all hover:border-blue-200 hover:shadow-[0_12px_28px_rgba(15,23,42,0.08)]"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <Database className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="text-[10px] font-mono text-slate-500">{product.rowsAffected} registros</span>
-                </div>
-                <h4 className="text-xs font-bold text-white mt-3">{WORK_PRODUCT_TITLES[product.id] ?? product.title}</h4>
-                <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">{product.evidenceRequired}</p>
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <ImportValidationPanel errors={rhResult.errors} warnings={rhResult.warnings} />
-            <div className="lg:col-span-2">
-              <ImportPreviewTable entities={rhResult.rows.slice(0, 20)} />
+          {/* Criticality Distribution */}
+          {summary?.criticality && (
+            <div className="rounded-lg border-2 p-4" style={{ backgroundColor: RJT_COLORS.neutral.white, borderColor: RJT_COLORS.primary.cyan }}>
+              <h3 className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: RJT_COLORS.primary.darkNavy }}>
+                Distribuição por Criticidade
+              </h3>
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Object.entries(summary.criticality).map(([crit, count]) => (
+                  <div key={crit} className="text-center">
+                    <p className="text-2xl font-extrabold" style={{ color: RJT_COLORS.primary.darkNavy }}>
+                      {count}
+                    </p>
+                    <p className="text-[10px] font-mono uppercase mt-1" style={{ color: RJT_COLORS.neutral.mediumGray }}>
+                      {crit}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Errors */}
+          {importResult.errors.length > 0 && (
+            <div className="rounded-lg border-2 p-4" style={{ backgroundColor: RJT_COLORS.status.error + "10", borderColor: RJT_COLORS.status.error }}>
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-4 h-4" style={{ color: RJT_COLORS.status.error }} />
+                <h3 className="text-xs font-bold uppercase" style={{ color: RJT_COLORS.status.error }}>
+                  Erros Críticos ({importResult.errors.length})
+                </h3>
+              </div>
+              <ul className="space-y-1 text-[11px]">
+                {importResult.errors.map((error, idx) => (
+                  <li key={idx} style={{ color: RJT_COLORS.status.error }}>
+                    • {error}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Warnings */}
+          {importResult.warnings.length > 0 && (
+            <div className="rounded-lg border-2 p-4" style={{ backgroundColor: RJT_COLORS.status.warning + "10", borderColor: RJT_COLORS.status.warning }}>
+              <div className="flex items-center gap-2 mb-3">
+                <Info className="w-4 h-4" style={{ color: RJT_COLORS.status.warning }} />
+                <h3 className="text-xs font-bold uppercase" style={{ color: RJT_COLORS.status.warning }}>
+                  Avisos ({importResult.warnings.length})
+                </h3>
+              </div>
+              <ul className="space-y-1 text-[11px]">
+                {importResult.warnings.slice(0, 5).map((warning, idx) => (
+                  <li key={idx} style={{ color: RJT_COLORS.status.warning }}>
+                    • {warning}
+                  </li>
+                ))}
+                {importResult.warnings.length > 5 && (
+                  <li style={{ color: RJT_COLORS.status.warning }}>
+                    ... e mais {importResult.warnings.length - 5} avisos
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          {isValid && (
+            <div className="flex gap-3">
+              <button
+                onClick={handleDownloadReport}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+                style={{ 
+                  backgroundColor: RJT_COLORS.primary.darkNavy,
+                  color: RJT_COLORS.neutral.white,
+                }}
+              >
+                <Download className="w-4 h-4" />
+                Baixar Relatório
+              </button>
+              <button
+                onClick={handleExportData}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+                style={{ 
+                  backgroundColor: RJT_COLORS.primary.cyan,
+                  color: RJT_COLORS.neutral.white,
+                }}
+              >
+                <Download className="w-4 h-4" />
+                Exportar Dados
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
