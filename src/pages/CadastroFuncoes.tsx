@@ -34,6 +34,8 @@ interface CadastroFuncoesProps {
   onUpdateFuncao: (funcao: FuncaoCritica) => void;
   editFuncNode: FuncaoCritica | null;
   clearEditNode: () => void;
+  collaborators?: any[];
+  skills?: any[];
 }
 
 export default function CadastroFuncoes({ 

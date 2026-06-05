@@ -3,44 +3,171 @@
  * Unified Workforce Intelligence & Operational Continuity Platform
  */
 
-export interface FuncaoCritica {
-  id: number;
-  idFuncao: string; // e.g. FC001
-  setor: string;
-  processo: string;
-  funcaoCritica: string;
-  atividadeTecnicaCritica: string;
-  colaboradorPrincipal: string;
-  backup1: string;
-  backup2: string;
-  existeBackup: "SIM" | "NÃO";
-  quantidadePessoasAptas: number;
-  nivelPolivalencia: number; // 1-4
-  grauDependenciaTecnica: number; // 1-5
-  tempoEstimadoFormacao: string;
-  complexidadeTecnica: "Baixa" | "Média" | "Alta";
-  impactoProducao: number; // 1-5
-  impactoCliente: number; // 1-5
-  impactoQualidade: number; // 1-5
-  gravidade: number; // 1-5
-  urgencia: number; // 1-5
-  tendencia: number; // 1-5
-  scoreGUT: number; // Calculated: G * U * T
-  scoreVulnerabilidade: number; // Calculated: D + Prod + Cl + Qual + Penalty(no backup)
-  wreIndex: number; // Calculated WRE Risk Stack: (GUT * 0.6) + (Vuln * 0.4)
-  classificacaoFinal: "Crítico" | "Alto" | "Médio" | "Baixo"; // Calculated by WRE Index
-  necessidadeIT: string;
-  necessidadeTreinamento: string;
-  necessidadeSucessao: string;
-  requisitoISO: string;
-  evidenciaNecessaria: string;
-  codigoDocumentoUBG: string;
-  acaoPDCARelacionada: string;
-  responsavel: string;
-  prazo: string; // YYYY-MM-DD
-  status: "Planejado" | "Em Execução" | "Concluído" | "Atrasado";
+// ============================================================================
+// 1. ENUMS AND PORTUGUESE DISPLAY LABELS
+// ============================================================================
+
+export enum CriticalityLevel {
+  CRITICAL = "CRITICAL",
+  IMPORTANT = "IMPORTANT",
+  SUPPORT = "SUPPORT"
 }
 
+export const CriticalityLabels: Record<CriticalityLevel, string> = {
+  [CriticalityLevel.CRITICAL]: "Crítica",
+  [CriticalityLevel.IMPORTANT]: "Importante",
+  [CriticalityLevel.SUPPORT]: "Apoio"
+};
+
+export enum RiskLevel {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL"
+}
+
+export const RiskLabels: Record<RiskLevel, string> = {
+  [RiskLevel.LOW]: "Baixo",
+  [RiskLevel.MEDIUM]: "Médio",
+  [RiskLevel.HIGH]: "Alto",
+  [RiskLevel.CRITICAL]: "Crítico"
+};
+
+export enum ActionStatus {
+  PENDING = "PENDING",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED"
+}
+
+export const ActionStatusLabels: Record<ActionStatus, string> = {
+  [ActionStatus.PENDING]: "Pendente",
+  [ActionStatus.IN_PROGRESS]: "Em andamento",
+  [ActionStatus.COMPLETED]: "Concluído",
+  [ActionStatus.CANCELLED]: "Cancelado"
+};
+
+export enum MaturityLevel {
+  JUNIOR = "JUNIOR",
+  PLENO = "PLENO",
+  SENIOR = "SENIOR",
+  SPECIALIST = "SPECIALIST"
+}
+
+export const MaturityNumericValues: Record<MaturityLevel, number> = {
+  [MaturityLevel.JUNIOR]: 1,
+  [MaturityLevel.PLENO]: 2,
+  [MaturityLevel.SENIOR]: 3,
+  [MaturityLevel.SPECIALIST]: 4
+};
+
+// All competencies start as UNASSESSED until evaluated with evidence
+export enum CompetencyLevel {
+  UNASSESSED = "UNASSESSED",
+  NOT_TRAINED = "NOT_TRAINED",
+  IN_TRAINING = "IN_TRAINING",
+  ASSISTED = "ASSISTED",
+  INDEPENDENT = "INDEPENDENT",
+  MULTIPLIER = "MULTIPLIER"
+}
+
+export const CompetencyLabels: Record<CompetencyLevel, string> = {
+  [CompetencyLevel.UNASSESSED]: "Não avaliado",
+  [CompetencyLevel.NOT_TRAINED]: "Não treinado",
+  [CompetencyLevel.IN_TRAINING]: "Em treinamento",
+  [CompetencyLevel.ASSISTED]: "Apto com apoio",
+  [CompetencyLevel.INDEPENDENT]: "Apto independente",
+  [CompetencyLevel.MULTIPLIER]: "Multiplicador"
+};
+
+export const CompetencyNumericValues: Record<CompetencyLevel, number> = {
+  [CompetencyLevel.UNASSESSED]: 0,
+  [CompetencyLevel.NOT_TRAINED]: 0,
+  [CompetencyLevel.IN_TRAINING]: 1,
+  [CompetencyLevel.ASSISTED]: 2,
+  [CompetencyLevel.INDEPENDENT]: 3,
+  [CompetencyLevel.MULTIPLIER]: 4
+};
+
+export enum SkillType {
+  TECHNICAL = "TECHNICAL",
+  REGULATORY = "REGULATORY",
+  OPERATIONAL = "OPERATIONAL"
+}
+
+export enum AlertSeverity {
+  INFO = "INFO",
+  WARNING = "WARNING",
+  CRITICAL = "CRITICAL"
+}
+
+export enum AlertType {
+  BACKUP_SHORTAGE = "BACKUP_SHORTAGE",
+  EXPIRED_TRAINING = "EXPIRED_TRAINING",
+  MATURITY_GAP = "MATURITY_GAP",
+  SPOF = "SPOF"
+}
+
+// ============================================================================
+// 2. SUPPORTING SUB-TYPES AND SCHEMAS
+// ============================================================================
+
+export interface OperationalCriteria {
+  productionImpact: boolean;
+  knowledgeConcentration: boolean;
+  trainingTime: boolean;
+  replacementDifficulty: boolean;
+  qualityImpact: boolean;
+  customerImpact: boolean;
+  operationalContinuityRisk: boolean;
+}
+
+export interface RequiredSkillConfig {
+  skillId: string; // FK to Skill
+  requiredProficiencyLevel: CompetencyLevel;
+  isMandatory: boolean;
+}
+
+// ============================================================================
+// 3. NORMALIZED DATABASE ENTITIES
+// ============================================================================
+
+export interface Skill {
+  id: string; // PK
+  name: string;
+  description: string;
+  type: SkillType;
+}
+
+export interface CollaboratorSkill {
+  skillId: string; // FK to Skill
+  proficiencyLevel: CompetencyLevel;
+  acquiredAt?: string; // ISO Date String
+  expiresAt?: string; // ISO Date String (for NRs/regulatory compliance)
+  isCertified: boolean;
+}
+
+export interface Collaborator {
+  id: string; // PK
+  name: string;
+  primaryFunctionId: string; // FK to CriticalFunction / FuncaoCritica
+  currentMaturity: MaturityLevel;
+  skills: CollaboratorSkill[];
+}
+
+export interface CompetencyAssessment {
+  id: string; // PK
+  collaboratorId: string; // FK to Collaborator
+  skillId: string; // FK to Skill
+  assessedLevel: CompetencyLevel;
+  assessedById: string; // FK to Collaborator
+  assessmentDate: string; // ISO Date String
+  evidenceDocumentUrl?: string; // Link to PDF or physical record UBG
+  observations?: string;
+  nextAssessmentDueDate?: string; // Recycle date
+}
+
+// Keep legacy ActionPlan and ISOEvidence matching App.tsx routing
 export interface ActionPlan {
   id: number;
   funcaoCriticaId: number;
@@ -66,21 +193,85 @@ export interface ISOEvidence {
   status: "Pendente" | "Em Análise" | "Validada";
   dataColeta: string;
   responsavelColeta: string;
+  // Relationship mappings (optional for legacy backward compatibility)
+  collaboratorId?: string;
+  functionId?: string;
+  validUntil?: string;
 }
 
+export interface FunctionAlert {
+  id: string;
+  label: string;
+  desc: string;
+  severity: "critical" | "warning";
+  active: boolean;
+}
+
+export interface FuncaoCritica {
+  id: number;
+  idFuncao: string; // e.g. FC001 / UBG-001
+  setor: string;
+  processo: string;
+  funcaoCritica: string;
+  atividadeTecnicaCritica: string;
+  colaboradorPrincipal: string;
+  backup1: string;
+  backup2: string;
+  existeBackup: "SIM" | "NÃO";
+  quantidadePessoasAptas: number;
+  nivelPolivalencia: number; // 1-4
+  grauDependenciaTecnica: number; // 1-5
+  tempoEstimadoFormacao: string;
+  complexidadeTecnica: "Baixa" | "Média" | "Alta";
+  impactoProducao: number; // 1-5
+  impactoCliente: number; // 1-5
+  impactoQualidade: number; // 1-5
+  gravidade: number; // 1-5
+  urgencia: number; // 1-5
+  tendencia: number; // 1-5
+  scoreGUT: number; // Calculated: G * U * T
+  scoreVulnerabilidade: number; // Calculated
+  wreIndex: number; // Calculated WRE Risk Stack
+  classificacaoFinal: "Crítico" | "Alto" | "Alta" | "Médio" | "Média" | "Baixo" | "Baixa";
+  necessidadeIT: string;
+  necessidadeTreinamento: string;
+  necessidadeSucessao: string;
+  requisitoISO: string;
+  evidenciaNecessaria: string;
+  codigoDocumentoUBG: string;
+  acaoPDCARelacionada: string;
+  responsavel: string;
+  prazo: string; // YYYY-MM-DD
+  status: "Planejado" | "Em Execução" | "Concluído" | "Atrasado";
+  
+  // Normalized Relationship IDs (Added for advanced Matrix layer)
+  mainOperatorIds?: string[];
+  backupOperatorIds?: string[];
+  requiredSkillIds?: string[];
+  requiredBackupQuantity?: number;
+  requiredSkills?: RequiredSkillConfig[];
+}
+
+export type CriticalFunction = FuncaoCritica;
+
+// Helper constants
 export const SETORES = [
   "Produção – Corte",
   "Produção – Costura",
   "Produção – Apoio",
   "Expedição",
   "Logística / Transporte",
-  "Compras",
+  "Compras / Suprimentos",
   "Financeiro",
   "Recursos Humanos",
-  "Manutenção",
+  "Manutenção Fabril",
   "Serviços Gerais",
   "Restaurante Industrial",
-  "Gestão Administrativa"
+  "Gestão Administrativa",
+  "Acabamento & Enfardamento",
+  "Almoxarifado",
+  "Frota & Distribuição",
+  "Inspeção & Laudos (Qualidade)"
 ];
 
 export const REQUISITOS_ISO = [
@@ -94,7 +285,7 @@ export const REQUISITOS_ISO = [
   { id: "8.5", desc: "Produção e Provisão de Serviço" }
 ];
 
-// Helper functions for scoring
+// Legacy GUT and Vulnerability helpers
 export function calculateGUT(g: number, u: number, t: number): number {
   return g * u * t;
 }
@@ -110,9 +301,7 @@ export function calculateVulnerability(
 }
 
 export function calculateWREIndex(gut: number, vuln: number): number {
-  // Normalize GUT (1-125) to a 100-point scale: (gut / 125) * 100
   const normalizedGUT = Math.round((gut / 125) * 100);
-  // Normalize Vulnerability (4-30) to a 100-point scale: ((vuln - 4) / 26) * 100
   const normalizedVuln = Math.round(((vuln - 4) / 26) * 100);
   return Math.round((normalizedGUT * 0.6) + (normalizedVuln * 0.4));
 }
@@ -140,43 +329,142 @@ export function getPriorityRank(classification: "Crítico" | "Alto" | "Médio" |
   }
 }
 
-export interface FunctionAlert {
-  id: string;
-  label: string;
-  desc: string;
-  severity: "critical" | "warning";
-  active: boolean;
+// ============================================================================
+// 4. ADVANCED COMPETENCY MATRIX SELECTOR ALGORITHMS
+// ============================================================================
+
+/**
+ * Strict Auditable Business Rule:
+ * Collaborator is a valid backup for a function ONLY if:
+ * 1. Has all mandatory required skills for the function.
+ * 2. Proficiency on those skills is at least INDEPENDENT (level >= 3).
+ * 3. Has a validated, non-expired ISO evidence OR a completed training plan in the system.
+ */
+export function selectIsValidBackup(
+  collaborator: Collaborator,
+  func: FuncaoCritica,
+  isoEvidencesList: ISOEvidence[] = [],
+  trainingPlansList: any[] = [] // Any list representing action plans of Training
+): boolean {
+  if (!func.requiredSkills || func.requiredSkills.length === 0) return false;
+  
+  const mandatorySkills = func.requiredSkills.filter(s => s.isMandatory);
+  
+  // 1 & 2. Competency checks
+  for (const reqSkill of mandatorySkills) {
+    const colabSkill = collaborator.skills.find(s => s.skillId === reqSkill.skillId);
+    if (!colabSkill) return false; // Missing competency entirely
+    
+    const currentVal = CompetencyNumericValues[colabSkill.proficiencyLevel] || 0;
+    const requiredMin = CompetencyNumericValues[CompetencyLevel.INDEPENDENT];
+    
+    if (currentVal < requiredMin) return false; // Not yet INDEPENDENT
+  }
+  
+  // 3. ISO Evidence check (status must be 'Validada' and refer to this collaborator/function)
+  // Or a concluded training action plan
+  const hasValidEvidence = isoEvidencesList.some(ev => 
+    ev.status === "Validada" &&
+    ev.codigoDocumentoUBG === func.codigoDocumentoUBG &&
+    // Safely match names/descriptions to avoid strict relational gaps
+    (ev.descricaoDocumento.toLowerCase().includes(collaborator.name.toLowerCase()) || 
+     ev.descricaoRequisito.toLowerCase().includes(collaborator.name.toLowerCase()))
+  );
+  
+  const hasCompletedTraining = trainingPlansList.some(tp =>
+    tp.status === "Concluido" &&
+    tp.funcaoCriticaId === func.id &&
+    tp.tipoAcao === "Treinamento" &&
+    tp.descricaoAcao.toLowerCase().includes(collaborator.name.toLowerCase())
+  );
+  
+  return hasValidEvidence || hasCompletedTraining;
 }
 
-// Workforce Intelligence Custom Calculators
-export function calculateBackupScore(f: FuncaoCritica): number {
-  if (f.existeBackup === "NÃO") return 0;
-  let score = 0;
-  if (f.backup1 && f.backup1 !== "Sem Backup Cadastrado" && f.backup1.trim() !== "" && !f.backup1.toLowerCase().includes("nenhum")) {
-    score += 50;
+/**
+ * Computes the quality-weighted Backup Score.
+ * - Backups with UNASSESSED or incomplete competencies: Weight 0.3 (Paper backup)
+ * - Fully validated backups (INDEPENDENT): Weight 1.0
+ * - Multiplier backups: Weight 1.2
+ */
+export function calculateBackupScore(
+  f: FuncaoCritica, 
+  collaboratorsList: Collaborator[] = [], 
+  isoEvidencesList: ISOEvidence[] = [], 
+  trainingPlansList: any[] = []
+): number {
+  if (collaboratorsList.length === 0) {
+    // Legacy fallback string analysis
+    if (f.existeBackup === "NÃO") return 0;
+    let score = 0;
+    if (f.backup1 && f.backup1 !== "Sem Backup Cadastrado" && f.backup1.trim() !== "" && !f.backup1.toLowerCase().includes("nenhum")) {
+      score += 50;
+    }
+    if (f.backup2 && f.backup2 !== "Sem Backup Cadastrado" && f.backup2.trim() !== "" && !f.backup2.toLowerCase().includes("nenhum") && !f.backup2.toLowerCase().includes("sem backup")) {
+      score += 50;
+    }
+    return score;
   }
-  if (f.backup2 && f.backup2 !== "Sem Backup Cadastrado" && f.backup2.trim() !== "" && !f.backup2.toLowerCase().includes("nenhum") && !f.backup2.toLowerCase().includes("sem backup")) {
-    score += 50;
-  }
-  if (f.existeBackup === "SIM" && score === 0) {
-    score = 50; // Safely fall back if marked SIM but names are generic
-  }
-  return score;
+  
+  const backupIds = f.backupOperatorIds || [];
+  if (backupIds.length === 0) return 0;
+  
+  const reqQty = f.requiredBackupQuantity || 2;
+  let scoreSum = 0;
+  
+  backupIds.forEach(id => {
+    const colab = collaboratorsList.find(c => c.id === id);
+    if (!colab) return;
+    
+    const isValid = selectIsValidBackup(colab, f, isoEvidencesList, trainingPlansList);
+    if (!isValid) {
+      scoreSum += 0.3; // Paper/Unassessed backup
+      return;
+    }
+    
+    // Check if they are Multiplier in all mandatory skills
+    const isMultiplier = (f.requiredSkills || [])
+      .filter(s => s.isMandatory)
+      .every(reqSkill => {
+        const cs = colab.skills.find(s => s.skillId === reqSkill.skillId);
+        return cs && cs.proficiencyLevel === CompetencyLevel.MULTIPLIER;
+      });
+      
+    scoreSum += isMultiplier ? 1.2 : 1.0;
+  });
+  
+  return Math.min(Math.round((scoreSum / reqQty) * 100), 100);
 }
 
-export function calculateCoverageScore(f: FuncaoCritica): number {
-  const base = f.existeBackup === "NÃO" ? 30 : (f.quantidadePessoasAptas >= 3 ? 100 : (f.quantidadePessoasAptas === 2 ? 70 : 30));
-  return base;
+export function calculateCoverageScore(
+  f: FuncaoCritica,
+  collaboratorsList: Collaborator[] = [],
+  isoEvidencesList: ISOEvidence[] = [],
+  trainingPlansList: any[] = []
+): number {
+  if (collaboratorsList.length === 0) {
+    const base = f.existeBackup === "NÃO" ? 30 : (f.quantidadePessoasAptas >= 3 ? 100 : (f.quantidadePessoasAptas === 2 ? 70 : 30));
+    return base;
+  }
+  
+  const mainOps = f.mainOperatorIds || [];
+  const hasMain = mainOps.length > 0;
+  
+  const bScore = calculateBackupScore(f, collaboratorsList, isoEvidencesList, trainingPlansList);
+  
+  const mainWeight = hasMain ? 40 : 0;
+  const backupWeight = (bScore / 100) * 60;
+  
+  return Math.round(mainWeight + backupWeight);
 }
 
-export function calculateTrainingScore(f: FuncaoCritica, acoes: ActionPlan[]): number {
+export function calculateTrainingScore(f: FuncaoCritica, acoes: ActionPlan[] = []): number {
   let score = 0;
   if (f.nivelPolivalencia === 1) score = 25;
   else if (f.nivelPolivalencia === 2) score = 50;
   else if (f.nivelPolivalencia === 3) score = 75;
   else if (f.nivelPolivalencia === 4) score = 100;
   
-  // Deduct 15% for each open training action plan linked to this function
   const openTrainingActions = acoes.filter(ac => 
     ac.funcaoCriticaId === f.id && 
     ac.tipoAcao === "Treinamento" && 
@@ -191,11 +479,114 @@ export function calculateMaturityScore(backup: number, training: number, coverag
   return Math.round((backup * 0.4) + (training * 0.3) + (coverage * 0.3));
 }
 
-export function getFunctionAlerts(f: FuncaoCritica, acoes: ActionPlan[]): FunctionAlert[] {
+// Selectors for UI listing and dropdown bindings
+export function selectCollaboratorsQualifiedForFunction(
+  func: FuncaoCritica,
+  collaborators: Collaborator[],
+  isoEvidencesList: ISOEvidence[] = [],
+  trainingPlansList: any[] = []
+): Collaborator[] {
+  return collaborators.filter(c => selectIsValidBackup(c, func, isoEvidencesList, trainingPlansList));
+}
+
+export interface SkillGapItem {
+  skillId: string;
+  requiredLevel: CompetencyLevel;
+  currentLevel: CompetencyLevel;
+  gap: number;
+  isMandatory: boolean;
+}
+
+export function selectSkillGapsForFunction(
+  func: FuncaoCritica,
+  collaborator: Collaborator
+): SkillGapItem[] {
+  const gaps: SkillGapItem[] = [];
+  if (!func.requiredSkills) return gaps;
+  
+  func.requiredSkills.forEach(reqSkill => {
+    const colabSkill = collaborator.skills.find(s => s.skillId === reqSkill.skillId);
+    const currentLevel = colabSkill ? colabSkill.proficiencyLevel : CompetencyLevel.UNASSESSED;
+    
+    const currentVal = CompetencyNumericValues[currentLevel] || 0;
+    const requiredVal = CompetencyNumericValues[reqSkill.requiredProficiencyLevel] || 0;
+    
+    if (currentVal < requiredVal) {
+      gaps.push({
+        skillId: reqSkill.skillId,
+        requiredLevel: reqSkill.requiredProficiencyLevel,
+        currentLevel,
+        gap: requiredVal - currentVal,
+        isMandatory: reqSkill.isMandatory
+      });
+    }
+  });
+  
+  return gaps;
+}
+
+export interface CandidateReadiness {
+  collaborator: Collaborator;
+  totalGap: number;
+  mandatoryGapsCount: number;
+  completedSkillsCount: number;
+}
+
+export function selectBackupCandidatesForFunction(
+  func: FuncaoCritica,
+  collaborators: Collaborator[],
+  isoEvidencesList: ISOEvidence[] = [],
+  trainingPlansList: any[] = []
+): CandidateReadiness[] {
+  const mainOps = func.mainOperatorIds || [];
+  
+  // Exclude main operator and already valid backups
+  const candidates = collaborators.filter(colab => 
+    !mainOps.includes(colab.id) &&
+    !selectIsValidBackup(colab, func, isoEvidencesList, trainingPlansList)
+  );
+  
+  const readinessList = candidates.map(colab => {
+    const gaps = selectSkillGapsForFunction(func, colab);
+    const totalGap = gaps.reduce((sum, item) => sum + item.gap, 0);
+    const mandatoryGapsCount = gaps.filter(item => item.isMandatory).length;
+    const completedSkillsCount = (func.requiredSkills || []).length - gaps.length;
+    
+    return {
+      collaborator: colab,
+      totalGap,
+      mandatoryGapsCount,
+      completedSkillsCount
+    };
+  });
+  
+  return readinessList.sort((a, b) => {
+    if (a.mandatoryGapsCount !== b.mandatoryGapsCount) {
+      return a.mandatoryGapsCount - b.mandatoryGapsCount;
+    }
+    if (a.totalGap !== b.totalGap) {
+      return a.totalGap - b.totalGap;
+    }
+    return b.completedSkillsCount - a.completedSkillsCount;
+  });
+}
+
+export function selectPolivalencyIndexByCollaborator(
+  collaborator: Collaborator,
+  functionsList: FuncaoCritica[],
+  isoEvidencesList: ISOEvidence[] = [],
+  trainingPlansList: any[] = []
+): number {
+  return functionsList.filter(func => 
+    func.colaboradorPrincipal.toLowerCase() !== collaborator.name.toLowerCase() &&
+    selectIsValidBackup(collaborator, func, isoEvidencesList, trainingPlansList)
+  ).length;
+}
+
+export function getFunctionAlerts(f: FuncaoCritica, acoes: ActionPlan[] = []): FunctionAlert[] {
   const alerts: FunctionAlert[] = [];
   
-  // 1. Missing backup
-  const hasNoBackup = f.existeBackup === "NÃO" || calculateBackupScore(f) === 0;
+  const hasNoBackup = f.existeBackup === "NÃO" || (f.backupOperatorIds && f.backupOperatorIds.length === 0);
   alerts.push({
     id: "missing_backup",
     label: "Sem Backup Habilitado",
@@ -204,17 +595,15 @@ export function getFunctionAlerts(f: FuncaoCritica, acoes: ActionPlan[]): Functi
     active: hasNoBackup
   });
   
-  // 2. Low coverage
-  const coverage = calculateCoverageScore(f);
+  const coverage = f.quantidadePessoasAptas;
   alerts.push({
     id: "low_coverage",
     label: "Baixa Cobertura de Equipe",
     desc: "Menos de 2 pessoas aptas na linha operacional. Risco de parada elevado.",
     severity: "critical",
-    active: coverage < 50 || f.quantidadePessoasAptas < 2
+    active: coverage < 2
   });
   
-  // 3. Missing skills
   alerts.push({
     id: "missing_skills",
     label: "Competência em Desenvolvimento",
@@ -223,7 +612,6 @@ export function getFunctionAlerts(f: FuncaoCritica, acoes: ActionPlan[]): Functi
     active: f.nivelPolivalencia < 3
   });
   
-  // 4. Long recovery time
   const formatTime = f.tempoEstimadoFormacao.toLowerCase();
   const isLongRecovery = formatTime.includes("6") || formatTime.includes("8") || formatTime.includes("12") || formatTime.includes("ano") || formatTime.includes("semestre");
   alerts.push({
@@ -234,7 +622,6 @@ export function getFunctionAlerts(f: FuncaoCritica, acoes: ActionPlan[]): Functi
     active: isLongRecovery
   });
   
-  // 5. Open critical actions
   const openActions = acoes.filter(ac => ac.funcaoCriticaId === f.id && ac.status !== "Concluido");
   const isCriticalRisk = f.classificacaoFinal === "Crítico" || f.classificacaoFinal === "Alto";
   alerts.push({
@@ -248,272 +635,23 @@ export function getFunctionAlerts(f: FuncaoCritica, acoes: ActionPlan[]): Functi
   return alerts;
 }
 
-// Default pre-populated seed data with real União Bag S/A departments and functions
-export const INITIAL_FUNCOES: FuncaoCritica[] = [
-  {
-    id: 1,
-    idFuncao: "FC001",
-    setor: "Produção – Corte",
-    processo: "Corte de Filme Tubular e Ráfia",
-    funcaoCritica: "Operador de Corte I",
-    atividadeTecnicaCritica: "Calibração e ajuste fino das lâminas de guilhotina e corte pneumático de alta precisão para big bags.",
-    colaboradorPrincipal: "Alessandro Ribeiro",
-    backup1: "Auxiliar de Corte - João Silva",
-    backup2: "Sem Backup Cadastrado",
-    existeBackup: "SIM",
-    quantidadePessoasAptas: 2,
-    nivelPolivalencia: 3,
-    grauDependenciaTecnica: 5,
-    tempoEstimadoFormacao: "6 meses",
-    complexidadeTecnica: "Alta",
-    impactoProducao: 5,
-    impactoCliente: 5,
-    impactoQualidade: 4,
-    gravidade: 5,
-    urgencia: 5,
-    tendencia: 5,
-    scoreGUT: 125,
-    scoreVulnerabilidade: 19, // 5+5+5+4 + 0
-    wreIndex: 83, // GUT Normalized (100% * 0.6) + Vuln Normalized (58% * 0.4) = 60 + 23 = 83
-    classificacaoFinal: "Crítico",
-    necessidadeIT: "Instrução Operacional de Regulagem de Guilhotina I.O-COR-01",
-    necessidadeTreinamento: "Treinamento de calibração eletrônica e segurança em guilhotinas",
-    necessidadeSucessao: "Formação acelerada do auxiliar de corte júnior",
-    requisitoISO: "7.2",
-    evidenciaNecessaria: "Testes práticos de corte e ficha de polivalência técnica",
-    codigoDocumentoUBG: "UBG-IT-COR-101",
-    acaoPDCARelacionada: "PDCA-CORTE-2026-001",
-    responsavel: "Eng. Cláudio Santos (SGQ)",
-    prazo: "2026-06-15",
-    status: "Em Execução"
-  },
-  {
-    id: 2,
-    idFuncao: "FC002",
-    setor: "Produção – Costura",
-    processo: "Costura Guia e Reforço de Alças",
-    funcaoCritica: "Costureira",
-    atividadeTecnicaCritica: "Costura de alças com ponto corrente duplo de alta tenacidade e ancoragem em fator de segurança 5:1.",
-    colaboradorPrincipal: "Maria Helena",
-    backup1: "Costureira Júnior - Regina Santos",
-    backup2: "Sem Backup Cadastrado",
-    existeBackup: "SIM",
-    quantidadePessoasAptas: 2,
-    nivelPolivalencia: 4,
-    grauDependenciaTecnica: 4,
-    tempoEstimadoFormacao: "4 meses",
-    complexidadeTecnica: "Alta",
-    impactoProducao: 5,
-    impactoCliente: 5,
-    impactoQualidade: 5,
-    gravidade: 5,
-    urgencia: 4,
-    tendencia: 4,
-    scoreGUT: 80,
-    scoreVulnerabilidade: 19, // 4+5+5+5 + 0
-    wreIndex: 61, // GUT Normalized (64% * 0.6) + Vuln Normalized (58% * 0.4) = 38 + 23 = 61
-    classificacaoFinal: "Alto",
-    necessidadeIT: "Instrução de Trabalho de Costura de Alças de Elevação",
-    necessidadeTreinamento: "Treinamento em ergonomia e costura de alta tração de ráfia",
-    necessidadeSucessao: "Capacitar Costureira Júnior para tripla fixação",
-    requisitoISO: "8.5",
-    evidenciaNecessaria: "Ensaio destrutivo de tração e folha de presença de treinamento prático",
-    codigoDocumentoUBG: "UBG-IT-COS-203",
-    acaoPDCARelacionada: "PDCA-RH-COMPET-302",
-    responsavel: "Supervisora de Produção Marcos Paulo",
-    prazo: "2026-07-28",
-    status: "Planejado"
-  },
-  {
-    id: 3,
-    idFuncao: "FC003",
-    setor: "Expedição",
-    processo: "Liberação de Lotes e Faturamento",
-    funcaoCritica: "Líder de Expedição",
-    atividadeTecnicaCritica: "Interface operacional de expedição física e validação de peso de lotes industriais sob a ISO 21898.",
-    colaboradorPrincipal: "Jonathan Barros",
-    backup1: "Abastecedor de Linha - Roberto Silva",
-    backup2: "Sem Backup Cadastrado",
-    existeBackup: "SIM",
-    quantidadePessoasAptas: 2,
-    nivelPolivalencia: 3,
-    grauDependenciaTecnica: 3,
-    tempoEstimadoFormacao: "3 meses",
-    complexidadeTecnica: "Média",
-    impactoProducao: 4,
-    impactoCliente: 5,
-    impactoQualidade: 4,
-    gravidade: 4,
-    urgencia: 4,
-    tendencia: 4,
-    scoreGUT: 64,
-    scoreVulnerabilidade: 16, // 3+4+5+4 + 0
-    wreIndex: 49, // GUT (51% * 0.6) + Vuln (46% * 0.4) = 31 + 18 = 49
-    classificacaoFinal: "Alto",
-    necessidadeIT: "Procedimento de Pesagem e Liberação de Big Bags",
-    necessidadeTreinamento: "Operação de balanças industriais e calibração de células de carga",
-    necessidadeSucessao: "Treinamento intensivo do abastecedor de linha",
-    requisitoISO: "7.1.6",
-    evidenciaNecessaria: "Ficha de inspeção e etiqueta de faturamento assinada",
-    codigoDocumentoUBG: "UBG-EXP-IT-008",
-    acaoPDCARelacionada: "PDCA-EXP-ISO-12",
-    responsavel: "Karina Mendes (SGQ)",
-    prazo: "2026-05-30",
-    status: "Concluído"
-  },
-  {
-    id: 4,
-    idFuncao: "FC004",
-    setor: "Manutenção",
-    processo: "Eletromecânica de Teares Circulares",
-    funcaoCritica: "Auxiliar de Manutenção",
-    atividadeTecnicaCritica: "Manutenção de primeiro nível, lubrificação de guias de lançadeira e troca preventiva de pinças Starlinger.",
-    colaboradorPrincipal: "Edmilson Bento",
-    backup1: "Nenhum habilitado para Starlinger",
-    backup2: "Sem Backup Cadastrado",
-    existeBackup: "NÃO",
-    quantidadePessoasAptas: 1,
-    nivelPolivalencia: 3,
-    grauDependenciaTecnica: 5,
-    tempoEstimadoFormacao: "12 meses",
-    complexidadeTecnica: "Alta",
-    impactoProducao: 5,
-    impactoCliente: 4,
-    impactoQualidade: 4,
-    gravidade: 5,
-    urgencia: 5,
-    tendencia: 5,
-    scoreGUT: 125,
-    scoreVulnerabilidade: 28, // 5+5+4+4 + 10
-    wreIndex: 97, // GUT (100% * 0.6) + Vuln (92% * 0.4) = 60 + 37 = 97
-    classificacaoFinal: "Crítico",
-    necessidadeIT: "Plano de Manutenção Periódica de Teares de Ráfia",
-    necessidadeTreinamento: "Curso avançado de sincronismo eletropneumático de teares",
-    necessidadeSucessao: "Contratar técnico de sobreaviso externo Starlinger",
-    requisitoISO: "8.1",
-    evidenciaNecessaria: "Ordem de serviço preventiva finalizada pelo SGQ",
-    codigoDocumentoUBG: "UBG-MP-TEAR-03",
-    acaoPDCARelacionada: "PDCA-MANUT-COMP-55",
-    responsavel: "Diretoria Industrial / RH",
-    prazo: "2026-08-10",
-    status: "Planejado"
-  },
-  {
-    id: 5,
-    idFuncao: "FC005",
-    setor: "Compras",
-    processo: "Aquisição de Insumos Críticos",
-    funcaoCritica: "Comprador",
-    atividadeTecnicaCritica: "Negociação de aditivos poliméricos especiais, fios de poliéster e polipropileno sob especificações da ISO 9001.",
-    colaboradorPrincipal: "Jonathan Santos",
-    backup1: "Assistente de Compras - Roberta Lima",
-    backup2: "Sem Backup Cadastrado",
-    existeBackup: "SIM",
-    quantidadePessoasAptas: 2,
-    nivelPolivalencia: 2,
-    grauDependenciaTecnica: 3,
-    tempoEstimadoFormacao: "3 meses",
-    complexidadeTecnica: "Média",
-    impactoProducao: 4,
-    impactoCliente: 3,
-    impactoQualidade: 4,
-    gravidade: 3,
-    urgencia: 3,
-    tendencia: 3,
-    scoreGUT: 27,
-    scoreVulnerabilidade: 14, // 3+4+3+4 + 0
-    wreIndex: 28, // GUT (21% * 0.6) + Vuln (38% * 0.4) = 13 + 15 = 28
-    classificacaoFinal: "Médio",
-    necessidadeIT: "Critérios de Qualificação de Fornecedores de PP UBG-COM-01",
-    necessidadeTreinamento: "Avaliação técnica de fichas de segurança química e reologia",
-    necessidadeSucessao: "Co-participação com o assistente de compras",
-    requisitoISO: "8.4",
-    evidenciaNecessaria: "Relatório de Qualificação de Fornecedor cadastrado no SGQ",
-    codigoDocumentoUBG: "UBG-IT-COM-08",
-    acaoPDCARelacionada: "Nenhuma",
-    responsavel: "Líder Adalto Ferreira",
-    prazo: "2026-09-01",
-    status: "Planejado"
-  }
-];
+export function selectRiskScore(
+  f: FuncaoCritica,
+  collaboratorsMap: Record<string, Collaborator>,
+  isoEvidencesList: ISOEvidence[] = [],
+  trainingPlansList: any[] = []
+): number {
+  const bkp = calculateBackupScore(f, Object.values(collaboratorsMap), isoEvidencesList, trainingPlansList);
+  const cov = calculateCoverageScore(f, Object.values(collaboratorsMap), isoEvidencesList, trainingPlansList);
+  const trn = calculateTrainingScore(f, trainingPlansList);
+  const mat = calculateMaturityScore(bkp, trn, cov);
+  
+  const baseRisk = f.wreIndex || f.scoreVulnerabilidade;
+  const factor = (100 - mat) / 100;
+  return Math.round(baseRisk + (100 - baseRisk) * factor);
+}
 
-export const INITIAL_ACTIONS: ActionPlan[] = [
-  {
-    id: 1,
-    funcaoCriticaId: 1,
-    funcaoCriticaCodigo: "FC001",
-    funcaoCriticaNome: "Operador de Corte I",
-    descricaoAcao: "Ministrar treinamento prático sênior sobre reologia e resfriamento de matriz para João Silva ser backup pleno.",
-    tipoAcao: "Treinamento",
-    responsavel: "Dr. Roberto Albuquerque (Consultor Técnico UBG)",
-    dataInicio: "2026-05-10",
-    dataPrazo: "2026-06-12",
-    status: "Em Execução",
-    acaoPDCA: "D",
-    observacoes: "João já concluiu a parte teórica online, agora necessita das horas supervisionadas de partida de máquina."
-  },
-  {
-    id: 2,
-    funcaoCriticaId: 2,
-    funcaoCriticaCodigo: "FC002",
-    funcaoCriticaNome: "Costureira",
-    descricaoAcao: "Revisar instruções de trabalho (IT-COS) detalhando a técnica de tripla fixação e homologação de bags sob norma ISO 21898.",
-    tipoAcao: "Documentação",
-    responsavel: "Regina Santos (Qualidade)",
-    dataInicio: "2026-05-20",
-    dataPrazo: "2026-06-25",
-    status: "Planejado",
-    acaoPDCA: "P",
-    observacoes: "Documentação servirá de base regulatória indispensável para o próximo concurso interno de costureiras."
-  },
-  {
-    id: 3,
-    funcaoCriticaId: 4,
-    funcaoCriticaCodigo: "FC004",
-    funcaoCriticaNome: "Auxiliar de Manutenção",
-    descricaoAcao: "Firmar convênio institucional com a Starlinger do Brasil para capacitação periódica e fornecimento de manuais digitais urgentes.",
-    tipoAcao: "Sucessão",
-    responsavel: "Patricia Giffoni (RH / Gestão de Pessoas)",
-    dataInicio: "2026-05-15",
-    dataPrazo: "2026-07-10",
-    status: "Em Execução",
-    acaoPDCA: "D",
-    observacoes: "Contrato em análise no departamento jurídico para repasse de bolsas de estudo técnicas."
-  }
-];
-
-export const INITIAL_EVIDENCES: ISOEvidence[] = [
-  {
-    id: 1,
-    requisitoISO: "7.2",
-    descricaoRequisito: "Competência: assegurar que pessoas sob seu controle sejam competentes com base em educação, treinamento ou experiência.",
-    evidenciaNecessaria: "Testes teóricos de ajuste de espessura de matriz plana e ficha técnica de polidominância de reologia.",
-    codigoDocumentoUBG: "UBG-IT-COR-101",
-    descricaoDocumento: "Instrução de Trabalho Completa de Calibração Térmica e de Regulagem de Guilhotinas.",
-    status: "Em Análise",
-    dataColeta: "2026-05-28",
-    responsavelColeta: "Cláudio Santos (SGQ)"
-  },
-  {
-    id: 2,
-    requisitoISO: "8.5",
-    descricaoRequisito: "Produção e Provisão de Serviço: controle nas operações de produção com liberação rigorosa, monitoramento e medição.",
-    evidenciaNecessaria: "Ensaio e laudo destrutivo de cisalhamento em costura em bags fator de segurança 5:1.",
-    codigoDocumentoUBG: "UBG-IT-COS-203",
-    descricaoDocumento: "Relatório Mensal de Ensaio de Tração de Alças União Bag.",
-    status: "Validada",
-    dataColeta: "2026-05-25",
-    responsavelColeta: "Tiago Nogueira (Analista Lab)"
-  },
-  {
-    id: 3,
-    requisitoISO: "7.1.6",
-    descricaoRequisito: "Conhecimento Organizacional: determinar o conhecimento necessário para a operação de seus processos e conformidade.",
-    evidenciaNecessaria: "Matriz de polivalência atualizada de todos os técnicos e backups por linha de produção.",
-    codigoDocumentoUBG: "UBG-RH-POL-001",
-    descricaoDocumento: "Mapeamento e Matriz Geral de Polivalência do Chão de Fábrica União Bag 2026.",
-    status: "Validada",
-    dataColeta: "2026-05-18",
-    responsavelColeta: "Karina Mendes (SGQ)"
-  }
-];
+// Preloaded mock seeds
+export const INITIAL_FUNCOES: FuncaoCritica[] = [];
+export const INITIAL_ACTIONS: ActionPlan[] = [];
+export const INITIAL_EVIDENCES: ISOEvidence[] = [];

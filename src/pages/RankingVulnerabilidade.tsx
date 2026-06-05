@@ -18,40 +18,62 @@ import {
   Sparkles,
   BookOpen,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  ShieldCheck,
+  UserCheck,
+  Zap
 } from "lucide-react";
 import { 
   FuncaoCritica, 
   ActionPlan, 
   ISOEvidence, 
   SETORES,
+  Collaborator,
+  Skill,
+  CompetencyAssessment,
+  CompetencyLevel,
+  CompetencyLabels,
   calculateBackupScore,
   calculateCoverageScore,
   calculateTrainingScore,
   calculateMaturityScore,
-  getFunctionAlerts
+  getFunctionAlerts,
+  selectIsValidBackup,
+  selectSkillGapsForFunction,
+  selectBackupCandidatesForFunction,
+  selectRiskScore
 } from "../types";
 
 interface RankingVulnerabilidadeProps {
   funcoes: FuncaoCritica[];
   acoes: ActionPlan[];
   evidencias: ISOEvidence[];
+  collaborators?: Collaborator[];
+  skills?: Skill[];
+  assessments?: CompetencyAssessment[];
   onDeleteFuncao: (id: number) => void;
   onSelectEdit: (funcao: FuncaoCritica) => void;
   onUpdateAcaoStatus: (id: number, newStatus: "Planejado" | "Em Execução" | "Concluido" | "Cancelado") => void;
   onUpdateEvidenciaStatus: (id: number, status: "Pendente" | "Em Análise" | "Validada") => void;
   onNavigateTab: (tab: string) => void;
+  onUpdateCollaboratorSkills?: (colabId: string, updatedSkills: any[]) => void;
+  onAddAssessment?: (newAs: CompetencyAssessment) => void;
 }
 
 export default function RankingVulnerabilidade({ 
   funcoes, 
   acoes,
   evidencias,
+  collaborators = [],
+  skills = [],
+  assessments = [],
   onDeleteFuncao, 
   onSelectEdit,
   onUpdateAcaoStatus,
   onUpdateEvidenciaStatus,
-  onNavigateTab 
+  onNavigateTab,
+  onUpdateCollaboratorSkills = () => {},
+  onAddAssessment = () => {}
 }: RankingVulnerabilidadeProps) {
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,10 +84,22 @@ export default function RankingVulnerabilidade({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
-  // Helper to get all calculated stats for sorting
+  // Competency Assessment Form State
+  const [assessmentForm, setAssessmentForm] = useState<{
+    collaboratorId: string;
+    skillId: string;
+    level: CompetencyLevel;
+    evidenceUrl: string;
+  }>({
+    collaboratorId: "",
+    skillId: "",
+    level: CompetencyLevel.INDEPENDENT,
+    evidenceUrl: ""
+  });
+
   const getCalculatedStats = (f: FuncaoCritica) => {
-    const bkp = calculateBackupScore(f);
-    const cov = calculateCoverageScore(f);
+    const bkp = calculateBackupScore(f, collaborators, evidencias, acoes);
+    const cov = calculateCoverageScore(f, collaborators, evidencias, acoes);
     const trn = calculateTrainingScore(f, acoes);
     const mat = calculateMaturityScore(bkp, trn, cov);
     return { bkp, cov, trn, mat };
@@ -73,6 +107,8 @@ export default function RankingVulnerabilidade({
 
   // Filter application
   const filteredList = funcoes.filter(f => {
+    const bkpScore = calculateBackupScore(f, collaborators, evidencias, acoes);
+    
     const matchesSearch = f.funcaoCritica.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           f.colaboradorPrincipal.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           f.idFuncao.toLowerCase().includes(searchTerm.toLowerCase());
@@ -81,13 +117,12 @@ export default function RankingVulnerabilidade({
     const matchesRisk = selectedRisk === "TODOS" || f.classificacaoFinal === selectedRisk;
     
     const matchesBackup = selectedBackupState === "TODOS" || 
-                         (selectedBackupState === "COM_BKP" && f.existeBackup === "SIM") || 
-                         (selectedBackupState === "SEM_BKP" && f.existeBackup === "NÃO");
+                         (selectedBackupState === "COM_BKP" && bkpScore > 0) || 
+                         (selectedBackupState === "SEM_BKP" && bkpScore === 0);
 
     return matchesSearch && matchesSector && matchesRisk && matchesBackup;
   });
 
-  // Sorting
   const sortedList = [...filteredList].sort((a, b) => {
     let multiplier = sortOrder === "desc" ? 1 : -1;
     if (sortBy === "vulnerabilidade") {
@@ -114,22 +149,79 @@ export default function RankingVulnerabilidade({
 
   const toggleRowExpand = (id: number) => {
     setExpandedRow(prev => prev === id ? null : id);
+    // Reset form when expanding/collapsing
+    setAssessmentForm({
+      collaboratorId: "",
+      skillId: "",
+      level: CompetencyLevel.INDEPENDENT,
+      evidenceUrl: ""
+    });
   };
 
-  // CSV Mock Export Utility
+  // Perform a direct competency assessment on an operator
+  const handleRegisterAssessment = (func: FuncaoCritica) => {
+    const colabId = assessmentForm.collaboratorId;
+    const skillId = assessmentForm.skillId;
+    const levelStr = assessmentForm.level;
+    
+    if (!colabId || !skillId) {
+      alert("Selecione o Colaborador e a Habilidade para avaliar.");
+      return;
+    }
+    
+    const colab = collaborators.find(c => c.id === colabId);
+    const skill = skills.find(s => s.id === skillId);
+    if (!colab || !skill) return;
+    
+    // Update the collaborator's skills array
+    const updatedSkills = colab.skills.map(s => {
+      if (s.skillId === skillId) {
+        return {
+          ...s,
+          proficiencyLevel: levelStr,
+          acquiredAt: new Date().toISOString().split("T")[0],
+          isCertified: levelStr === CompetencyLevel.INDEPENDENT || levelStr === CompetencyLevel.MULTIPLIER
+        };
+      }
+      return s;
+    });
+    
+    // Register CompetencyAssessment audit trail
+    const newAs: CompetencyAssessment = {
+      id: `as_${Date.now()}`,
+      collaboratorId: colabId,
+      skillId: skillId,
+      assessedLevel: levelStr,
+      assessedById: "colab_03", // Supervisor (Eliane Marchesine Netto)
+      assessmentDate: new Date().toISOString().split("T")[0],
+      evidenceDocumentUrl: assessmentForm.evidenceUrl || undefined,
+      observations: `Avaliação regulatória no posto de trabalho União Bag para a função ${func.idFuncao}.`
+    };
+    
+    onUpdateCollaboratorSkills(colabId, updatedSkills);
+    onAddAssessment(newAs);
+    
+    // Reset form
+    setAssessmentForm({
+      collaboratorId: "",
+      skillId: "",
+      level: CompetencyLevel.INDEPENDENT,
+      evidenceUrl: ""
+    });
+  };
+
   const handleExportCSV = () => {
     const headers = [
       "ID", "Setor", "Processo", "Função Crítica", "Principal", "Backup 1", "Backup 2",
-      "Existe Backup", "Polivalência", "Dependência", "GUT Score", 
-      "Vulnerabilidade Score", "Classificação", "ISO Cláusula", "Maturidade Score"
+      "Existe Backup", "GUT Score", "Vulnerabilidade Score", "Classificação", "ISO Cláusula", "Maturidade Score"
     ];
     
     const csvRows = funcoes.map(f => {
       const stats = getCalculatedStats(f);
       return [
         f.idFuncao, f.setor, f.processo, `"${f.funcaoCritica}"`, `"${f.colaboradorPrincipal}"`, 
-        `"${f.backup1}"`, `"${f.backup2}"`, f.existeBackup, f.nivelPolivalencia, f.grauDependenciaTecnica, 
-        f.scoreGUT, f.scoreVulnerabilidade, f.classificacaoFinal, f.requisitoISO, `${stats.mat}%`
+        `"${f.backup1}"`, `"${f.backup2}"`, f.existeBackup, f.scoreGUT, f.scoreVulnerabilidade, 
+        f.classificacaoFinal, f.requisitoISO, `${stats.mat}%`
       ];
     });
 
@@ -166,7 +258,7 @@ export default function RankingVulnerabilidade({
           
           <button
             onClick={() => onNavigateTab("cadastro")}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-lg text-xs font-bold shadow-md cursor-pointer transition-all border-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-650 hover:bg-indigo-700 active:bg-indigo-850 text-white rounded-lg text-xs font-bold shadow-md cursor-pointer transition-all border-0"
           >
             <Plus className="w-4 h-4" />
             <span>Mapear Competência</span>
@@ -177,13 +269,12 @@ export default function RankingVulnerabilidade({
       {/* FILTER CONTROLS GRID */}
       <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm space-y-4">
         <div className="flex items-center gap-2 text-slate-700 font-bold text-xs uppercase tracking-wider">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-650" />
+          <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-655" />
           <span>Filtros do Sistema de Sucessão</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          {/* Search bar */}
           <div className="relative">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
               <Search className="w-4 h-4" />
@@ -197,24 +288,22 @@ export default function RankingVulnerabilidade({
             />
           </div>
 
-          {/* Sector filter */}
           <div>
             <select
               value={selectedSector}
               onChange={e => setSelectedSector(e.target.value)}
-              className="w-full p-2 border border-slate-200 bg-slate-50 text-slate-700 text-xs rounded-lg focus:outline-none focus:ring-1"
+              className="w-full p-2 border border-slate-200 bg-slate-50 text-slate-705 text-xs rounded-lg focus:outline-none focus:ring-1"
             >
               <option value="TODOS">Setor: Todos</option>
               {SETORES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* Risk WRE Filter */}
           <div>
             <select
               value={selectedRisk}
               onChange={e => setSelectedRisk(e.target.value)}
-              className="w-full p-2 border border-slate-200 bg-slate-50 text-slate-700 text-xs rounded-lg focus:outline-none focus:ring-1"
+              className="w-full p-2 border border-slate-200 bg-slate-50 text-slate-705 text-xs rounded-lg focus:outline-none focus:ring-1"
             >
               <option value="TODOS">Criticidade: Todas</option>
               <option value="Crítico">Crítico (WRE Index &ge; 75)</option>
@@ -224,12 +313,11 @@ export default function RankingVulnerabilidade({
             </select>
           </div>
 
-          {/* Backup state Filter */}
           <div>
             <select
               value={selectedBackupState}
               onChange={e => setSelectedBackupState(e.target.value)}
-              className="w-full p-2 border border-slate-200 bg-slate-50 text-slate-700 text-xs rounded-lg focus:outline-none focus:ring-1"
+              className="w-full p-2 border border-slate-200 bg-slate-50 text-slate-705 text-xs rounded-lg focus:outline-none focus:ring-1"
             >
               <option value="TODOS">Mapeamento Backup: Todos</option>
               <option value="SEM_BKP">Sem backup ativo (Risco Elevado)</option>
@@ -249,7 +337,7 @@ export default function RankingVulnerabilidade({
                 setSelectedRisk("TODOS");
                 setSelectedBackupState("TODOS");
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full text-[10px] font-bold cursor-pointer transition-all border border-slate-200"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-655 rounded-full text-[10px] font-bold cursor-pointer transition-all border border-slate-200"
             >
               <X className="w-3 h-3 text-slate-500" />
               Resetar Filtros
@@ -280,9 +368,9 @@ export default function RankingVulnerabilidade({
                   </div>
                 </th>
                 <th className="cursor-pointer hover:bg-slate-100 transition-colors text-center" onClick={() => handleSortToggle("maturidade")}>
-                  <div className="flex items-center justify-center gap-1 text-indigo-650">
+                  <div className="flex items-center justify-center gap-1 text-[#000675]">
                     <span>Maturidade</span>
-                    {sortBy === "maturidade" && (sortOrder === "desc" ? <ChevronDown className="w-3.5 h-3.5 text-indigo-650" /> : <ChevronUp className="w-3.5 h-3.5 text-indigo-650" />)}
+                    {sortBy === "maturidade" && (sortOrder === "desc" ? <ChevronDown className="w-3.5 h-3.5 text-[#000675]" /> : <ChevronUp className="w-3.5 h-3.5 text-[#000675]" />)}
                   </div>
                 </th>
                 <th className="text-right pr-6">Ações</th>
@@ -305,57 +393,51 @@ export default function RankingVulnerabilidade({
                   // Find connected Action Plans & ISO Evidence
                   const linkedActions = acoes.filter(ac => ac.funcaoCriticaId === f.id);
                   const linkedEvidences = evidencias.filter(ev => 
-                    ev.codigoDocumentoUBG === f.codigoDocumentoUBG || 
-                    ev.requisitoISO === f.requisitoISO
+                    ev.codigoDocumentoUBG === f.codigoDocumentoUBG
                   );
 
-                  // Extract dynamic skill tags
-                  const skills = f.atividadeTecnicaCritica
-                    .split(",")
-                    .map(s => s.trim())
-                    .filter(s => s.length > 0)
-                    .slice(0, 4);
+                  // Collaborators mapped to this function
+                  const mainOps = collaborators.filter(c => (f.mainOperatorIds || []).includes(c.id));
+                  const backupOps = collaborators.filter(c => (f.backupOperatorIds || []).includes(c.id));
+
+                  // Gather unique skills configurations
+                  const requiredSkillsConfig = f.requiredSkills || [];
 
                   return (
                     <table-row-container key={f.id} className="contents">
                       {/* Standard row */}
                       <tr className={`hover:bg-slate-50 transition-all cursor-pointer ${
-                        isLowMaturity ? "bg-rose-50/30" : isNoBackup ? "bg-amber-50/20" : ""
+                        isLowMaturity ? "bg-rose-50/20" : isNoBackup ? "bg-amber-50/15" : ""
                       }`}>
                         
-                        {/* ID */}
-                        <td className="px-6 py-4.5 font-mono font-bold text-indigo-600" onClick={() => toggleRowExpand(f.id)}>
+                        <td className="px-6 py-4.5 font-mono font-bold text-indigo-655" onClick={() => toggleRowExpand(f.id)}>
                           <span>{f.idFuncao}</span>
                         </td>
 
-                        {/* Sector & Process */}
                         <td className="px-6 py-4.5 max-w-[200px]" onClick={() => toggleRowExpand(f.id)}>
-                          <span className="block font-bold text-slate-800">{f.setor}</span>
+                          <span className="block font-bold text-slate-800 truncate">{f.setor}</span>
                           <span className="block text-slate-400 text-[10px] truncate" title={f.processo}>{f.processo}</span>
                         </td>
 
-                        {/* Critical function */}
                         <td className="px-6 py-4.5 font-medium text-slate-800 pr-2" onClick={() => toggleRowExpand(f.id)}>
                           <span className="block text-[13px] font-bold text-slate-900">{f.funcaoCritica}</span>
-                          <span className="text-[9px] font-bold tracking-wider text-slate-400 mt-0.5 inline-block uppercase bg-slate-100 px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-bold tracking-wider text-[#00A4FF] mt-0.5 inline-block uppercase bg-slate-100 px-1.5 py-0.5 rounded">
                             ISO COMP: Cl. {f.requisitoISO}
                           </span>
                         </td>
 
-                        {/* Principal worker */}
                         <td className="px-6 py-4.5" onClick={() => toggleRowExpand(f.id)}>
-                          <span className="font-bold text-slate-800">{f.colaboradorPrincipal}</span>
+                          <span className="font-bold text-slate-800 block">{f.colaboradorPrincipal}</span>
                           <div className="flex items-center gap-1 mt-0.5 text-[10px] text-slate-400">
-                            <span>Backup:</span>
+                            <span>Backup habilitado:</span>
                             <span className={isNoBackup ? "text-rose-600 font-bold" : "text-teal-600 font-bold"}>
-                              {f.existeBackup === "SIM" && f.backup1 ? f.backup1 : "Nenhum Ativo"}
+                              {stats.bkp > 0 ? `${stats.bkp}%` : "Nenhum Ativo"}
                             </span>
                           </div>
                         </td>
 
-                        {/* GUT Score with severity pill */}
                         <td className="px-6 py-4.5 text-center" onClick={() => toggleRowExpand(f.id)}>
-                          <span className="font-mono font-black block text-slate-800 text-sm">{f.scoreGUT}</span>
+                          <span className="font-mono font-black block text-slate-850 text-sm">{f.scoreGUT}</span>
                           <span className={`inline-block text-[9px] font-extrabold uppercase mt-1 px-2 py-0.5 rounded ${
                             f.classificacaoFinal === "Crítico" 
                               ? "bg-rose-50 text-rose-700 border border-rose-100" 
@@ -369,10 +451,9 @@ export default function RankingVulnerabilidade({
                           </span>
                         </td>
 
-                        {/* Function Maturity Score indicator */}
                         <td className="px-6 py-4.5 text-center" onClick={() => toggleRowExpand(f.id)}>
                           <span className={`font-mono font-black text-sm block ${
-                            isLowMaturity ? "text-rose-655" : stats.mat < 75 ? "text-amber-600" : "text-teal-655"
+                            isLowMaturity ? "text-rose-600" : stats.mat < 75 ? "text-amber-500" : "text-teal-655"
                           }`}>
                             {stats.mat}%
                           </span>
@@ -383,7 +464,6 @@ export default function RankingVulnerabilidade({
                           </div>
                         </td>
 
-                        {/* Row Action triggers */}
                         <td className="px-6 py-4.5 text-right pr-6">
                           <div className="inline-flex items-center gap-2">
                             <button
@@ -423,215 +503,239 @@ export default function RankingVulnerabilidade({
 
                       </tr>
 
-                      {/* Expandable row detail holding more of the 34 fields */}
+                      {/* Expandable row detail holding the Dossiê & the Skill Assessment Audit System */}
                       {isExpanded && (
                         <tr className="bg-slate-50/80 font-sans border-t border-b border-slate-200 animate-fade-in shadow-inner">
                           <td colSpan={7} className="px-6 py-6 text-xs text-slate-700">
                             
-                            {/* Segmented Dossiê Layout */}
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white border border-slate-200 rounded p-5 shadow-sm">
                               
-                              {/* COL 1: Dossiê Geral & Sucessores */}
-                              <div className="lg:col-span-4 space-y-4">
-                                <div>
-                                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100 font-sans">
-                                    <BookOpen className="w-3.5 h-3.5 text-[#000675]" />
-                                    Dossiê da Função — União Bag
-                                  </h4>
-                                </div>
-                                <div className="space-y-2.5">
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Função Mapeada</strong> <span className="font-bold text-slate-800 text-xs">{f.funcaoCritica} ({f.idFuncao})</span></p>
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Setor / Departamento</strong> <span className="font-semibold text-slate-750">{f.setor}</span></p>
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Atividade Prática Crítica</strong> <span className="block leading-relaxed bg-slate-50 p-2 rounded border border-slate-150 text-[11px] font-medium">{f.atividadeTecnicaCritica}</span></p>
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Nível de Criticidade</strong> <span className={`font-bold inline-block px-1.5 py-0.5 rounded text-[9.5px] uppercase ${f.classificacaoFinal === 'Crítico' || f.classificacaoFinal === 'Alta' ? 'bg-rose-50 text-rose-700 border border-rose-100' : f.classificacaoFinal === 'Alto' || f.classificacaoFinal === 'Média' || f.classificacaoFinal === 'Médio' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-teal-50 text-teal-700 border border-teal-100'}`}>{f.classificacaoFinal}</span></p>
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Backup Status</strong> <span className="font-bold text-slate-800">{ (f as any).backupStatus || (f.existeBackup === "SIM" ? "Backup validado" : "Sem backup") }</span></p>
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Status de Treinamento</strong> <span className="font-bold text-slate-800">{ (f as any).trainingStatus || "Não iniciado" }</span></p>
-                                  <p><strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block">Tempo Estimado de Formação</strong> <span className="inline-flex items-center gap-1 font-mono font-bold text-slate-800 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]"><Clock className="w-3 h-3 text-slate-500" /> { (f as any).tempoEstimadoFormacaoDias ? `${(f as any).tempoEstimadoFormacaoDias} dias` : f.tempoEstimadoFormacao }</span></p>
-                                  <div>
-                                    <strong className="text-slate-450 font-bold uppercase text-[9px] tracking-wider block mb-1">Competências Requeridas</strong>
-                                    <div className="flex flex-wrap gap-1">
-                                      {skills.length > 0 ? skills.map((s, idx) => (
-                                        <span key={idx} className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[9px] font-bold border border-indigo-100">{s}</span>
-                                      )) : <span className="text-slate-400 italic">Nenhum requisito cadastrado</span>}
-                                    </div>
-                                  </div>
-                                              {/* COL 2: Métricas, Risco & Evidências ISO */}
-                              <div className="lg:col-span-4 space-y-4 border-t lg:border-t-0 lg:border-l lg:border-r border-slate-200 lg:px-6">
-                                <div>
-                                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100 font-sans">
-                                    <TrendingUp className="w-3.5 h-3.5 text-[#000675]" />
-                                    Risco, ISO & Evidências
-                                  </h4>
-                                </div>
-                                <div className="space-y-3">
-                                  <div className="bg-slate-50 p-3 border border-slate-200 rounded flex items-center justify-between">
-                                    <div>
-                                      <span className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Risk Score (Vulnerabilidade)</span>
-                                      <span className="block text-xs font-mono font-bold mt-1 text-slate-400">Escala de 0 a 100</span>
-                                    </div>
-                                    <span className={`text-xl font-mono font-bold ${f.scoreVulnerabilidade >= 60 ? 'text-rose-600' : f.scoreVulnerabilidade >= 20 ? 'text-amber-600' : 'text-teal-600'}`}>
-                                      {f.scoreVulnerabilidade}.00
-                                    </span>
-                                  </div>
-
-                                  <div className="bg-slate-50 p-3 border border-slate-200 rounded flex items-center justify-between">
-                                    <div>
-                                      <span className="block text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Relação ISO 9001:2015</span>
-                                      <span className="block text-xs font-bold mt-1 text-slate-700">Cláusula {f.requisitoISO}</span>
-                                    </div>
-                                  </div>
-
-                                  <div className="bg-slate-50 p-3 border border-slate-200 rounded space-y-1.5">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-[9px] font-bold text-slate-450 uppercase tracking-wider leading-none">Evidência Requerida</span>
-                                      <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${ (f as any).evidenciaStatus === "Validada" ? "bg-teal-50 text-teal-700 border border-teal-100" : (f as any).evidenciaStatus === "Parcial" ? "bg-amber-50 text-amber-700 border border-amber-100" : "bg-rose-50 text-rose-700 border border-rose-100" }`}>
-                                        { (f as any).evidenciaStatus || "Pendente" }
-                                      </span>
-                                    </div>
-                                    <span className="block text-[11px] font-medium leading-relaxed text-slate-600 pt-0.5">
-                                      {f.evidenciaNecessaria || "Ficha de polivalência técnica homologada no SGQ"}
-                                    </span>
-                                  </div>
-                                </div>                     </div>
-                                </div>
-
-                                {/* Active HR succession alerts */}
-                                <div className="space-y-1.5 pt-1">
-                                  <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Garantia contra gargalos</span>
-                                  {getFunctionAlerts(f, acoes).filter(al => al.active).length === 0 ? (
-                                    <div className="p-2.5 bg-teal-50 border border-teal-100 text-teal-700 text-[10px] rounded font-bold flex items-center gap-1.5">
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
-                                      <span>Função Operacional Segura e Mitigada</span>
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-1.5 max-h-[85px] overflow-y-auto pr-1">
-                                      {getFunctionAlerts(f, acoes).filter(al => al.active).map(al => (
-                                        <div key={al.id} className={`p-2 rounded border text-[9px] leading-relaxed flex items-start gap-1.5 font-bold ${
-                                          al.severity === "critical" 
-                                            ? "bg-rose-50 border-rose-100 text-rose-700" 
-                                            : "bg-amber-50 border-amber-100 text-amber-700"
-                                        }`}>
-                                          <AlertTriangle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${al.severity === 'critical' ? 'text-rose-600' : 'text-amber-600'}`} />
-                                          <div>
-                                            <p className="font-extrabold">{al.label}</p>
-                                            <p className="text-[8.5px] font-medium text-slate-500 mt-0.5">{al.desc}</p>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* COL 3: PDCA & Auditoria ISO (Conectividade Direta) */}
+                              {/* COL 1: Dossiê Geral & Headcount */}
                               <div className="lg:col-span-4 space-y-4">
                                 <div>
                                   <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                                    <FileCheck className="w-3.5 h-3.5 text-indigo-650" />
-                                    Planos PDCA & Evidências
+                                    <BookOpen className="w-3.5 h-3.5 text-[#000675]" />
+                                    Dossiê União Bag — Força de Trabalho
+                                  </h4>
+                                </div>
+                                <div className="space-y-2.5">
+                                  <p><strong className="text-slate-400 font-bold uppercase text-[9px] tracking-wider block">Função Técnica Mapeada</strong> <span className="font-bold text-slate-800 text-xs">{f.funcaoCritica} ({f.idFuncao})</span></p>
+                                  <p><strong className="text-slate-400 font-bold uppercase text-[9px] tracking-wider block">Departamento Operacional</strong> <span className="font-semibold text-slate-700">{f.setor}</span></p>
+                                  <p><strong className="text-slate-400 font-bold uppercase text-[9px] tracking-wider block">Operadores Principais Ativos ({mainOps.length})</strong> 
+                                    <span className="block leading-relaxed bg-slate-50 p-2 rounded border border-slate-150 text-[11px] font-bold text-[#04044A]">
+                                      {mainOps.length > 0 ? mainOps.map(m => m.name).join(", ") : f.colaboradorPrincipal}
+                                    </span>
+                                  </p>
+                                  <p><strong className="text-slate-400 font-bold uppercase text-[9px] tracking-wider block">Operadores Substitutos Cadastrados ({backupOps.length})</strong> 
+                                    <span className="block leading-relaxed bg-slate-50 p-2 rounded border border-slate-150 text-[11px] font-bold text-slate-700">
+                                      {backupOps.length > 0 ? backupOps.map(b => b.name).join(", ") : f.backup1}
+                                    </span>
+                                  </p>
+                                  <p><strong className="text-slate-400 font-bold uppercase text-[9px] tracking-wider block">Tempo de Formação Requerido</strong> <span className="inline-flex items-center gap-1 font-mono font-bold text-slate-800 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]"><Clock className="w-3 h-3 text-slate-500" /> {f.tempoEstimadoFormacao}</span></p>
+                                </div>
+                              </div>
+
+                              {/* COL 2: ISO, Evidências & Watchlist */}
+                              <div className="lg:col-span-4 space-y-4 border-t lg:border-t-0 lg:border-l lg:border-r border-slate-200 lg:px-6">
+                                <div>
+                                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-[#000675]" />
+                                    ISO 9001:2015 & Alertas
+                                  </h4>
+                                </div>
+                                <div className="space-y-3">
+                                  <div className="bg-slate-50 p-2.5 border border-slate-200 rounded flex items-center justify-between">
+                                    <div>
+                                      <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">Risco de Sucessão Consolidado</span>
+                                      <span className="block text-xs font-mono font-bold mt-1 text-slate-500">Calculado reativamente</span>
+                                    </div>
+                                    <span className={`text-xl font-mono font-bold ${f.scoreVulnerabilidade >= 60 ? 'text-rose-600 animate-pulse' : f.scoreVulnerabilidade >= 20 ? 'text-amber-600' : 'text-teal-655'}`}>
+                                      {selectRiskScore(f, collaborators.reduce((acc, c) => ({ ...acc, [c.id]: c }), {}), evidencias, acoes)}
+                                    </span>
+                                  </div>
+
+                                  <div className="bg-slate-50 p-2.5 border border-slate-200 rounded space-y-1">
+                                    <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase">
+                                      <span>Evidência Regulatório / ISO</span>
+                                      <span>{f.codigoDocumentoUBG}</span>
+                                    </div>
+                                    <p className="text-[11px] font-medium text-slate-655 leading-snug">{f.evidenciaNecessaria}</p>
+                                  </div>
+
+                                  {/* Alertas dinâmicos baseados na proficiência real */}
+                                  <div className="space-y-1">
+                                    <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Passivo de Auditoria</span>
+                                    {getFunctionAlerts(f, acoes).filter(al => al.active).map(al => (
+                                      <div key={al.id} className={`p-2 rounded border text-[9px] leading-relaxed flex items-start gap-1 font-bold ${
+                                        al.severity === "critical" 
+                                          ? "bg-rose-50 border-rose-100 text-rose-700" 
+                                          : "bg-amber-50 border-amber-100 text-amber-700"
+                                      }`}>
+                                        <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5 text-rose-655" />
+                                        <div>
+                                          <p className="font-extrabold">{al.label}</p>
+                                          <p className="text-[8.5px] font-medium text-slate-500">{al.desc}</p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                </div>
+                              </div>
+
+                              {/* COL 3: THE HR SKILL ASSESSMENT AUDIT TERMINAL (Auditable future support) */}
+                              <div className="lg:col-span-4 space-y-4">
+                                <div>
+                                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                                    <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                    Avaliação Prática de Competência
                                   </h4>
                                 </div>
 
-                                {/* PDCA Actions List with direct status update */}
-                                <div className="space-y-2">
-                                  <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                                    <span>Planos de Ação Conectados</span>
-                                    <span className="text-indigo-600 font-extrabold">Direto</span>
-                                  </div>
+                                <div className="bg-[#F8FAFC] border border-slate-200 rounded p-4 space-y-3 text-xs shadow-inner">
+                                  <span className="text-[9px] font-bold text-indigo-655 uppercase tracking-wider block">Registrar Novo Laudo de Proficiência</span>
                                   
-                                  {linkedActions.length === 0 ? (
-                                    <p className="text-[10px] text-slate-400 italic bg-slate-50 p-2.5 rounded text-center border border-slate-100">Nenhum plano de ação pendente.</p>
-                                  ) : (
-                                    <div className="space-y-1.5 max-h-[105px] overflow-y-auto pr-1">
-                                      {linkedActions.map(ac => (
-                                        <div key={ac.id} className="p-2 border border-slate-200 rounded bg-slate-50/50 hover:bg-slate-50 flex items-center justify-between text-[10px] gap-2">
-                                          <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-1 text-[9px] font-bold">
-                                              <span className="text-indigo-600 uppercase font-mono">{ac.tipoAcao}</span>
-                                              <span className="text-slate-300">|</span>
-                                              <span className="text-slate-500 truncate" title={ac.descricaoAcao}>{ac.descricaoAcao}</span>
-                                            </div>
-                                            <p className="text-slate-400 text-[8.5px] mt-0.5 truncate">Prazo: {ac.dataPrazo}</p>
-                                          </div>
-                                          <div>
-                                            <select
-                                              value={ac.status}
-                                              onChange={(e) => onUpdateAcaoStatus(ac.id, e.target.value as any)}
-                                              className={`p-1 text-[9px] rounded font-bold border ${
-                                                ac.status === "Concluido" 
-                                                  ? "bg-teal-50 border-teal-150 text-teal-700" 
-                                                  : ac.status === "Em Execução" 
-                                                  ? "bg-indigo-50 border-indigo-150 text-indigo-700" 
-                                                  : "bg-slate-100 border-slate-250 text-slate-600"
-                                              }`}
-                                            >
-                                              <option value="Planejado">Planejado</option>
-                                              <option value="Em Execução">Em Execução</option>
-                                              <option value="Concluido">Concluido</option>
-                                              <option value="Cancelado">Cancelado</option>
-                                            </select>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
+                                  {/* Dropdown 1: Select Collaborator (Main or backup or any other) */}
+                                  <div className="space-y-1">
+                                    <label className="text-[9.5px] font-bold text-slate-550 uppercase">Colaborador Avaliado</label>
+                                    <select
+                                      value={assessmentForm.collaboratorId}
+                                      onChange={e => setAssessmentForm(prev => ({ ...prev, collaboratorId: e.target.value }))}
+                                      className="w-full p-1.5 border border-slate-250 bg-white text-xs rounded focus:outline-none"
+                                    >
+                                      <option value="">-- Selecionar Operador (55 da Planta) --</option>
+                                      <optgroup label="Operadores deste Cargo">
+                                        {[...mainOps, ...backupOps].map(c => (
+                                          <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))}
+                                      </optgroup>
+                                      <optgroup label="Outros da Planta União Bag">
+                                        {collaborators
+                                          .filter(c => !mainOps.some(mo => mo.id === c.id) && !backupOps.some(bo => bo.id === c.id))
+                                          .sort((a, b) => a.name.localeCompare(b.name))
+                                          .map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                          ))
+                                        }
+                                      </optgroup>
+                                    </select>
+                                  </div>
 
-                                {/* ISO 9001 Evidences list with Direct Validation checkbox */}
-                                <div className="space-y-2 pt-1">
-                                  <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                                    <span>Conformidade ISO 9001:2015</span>
-                                    <span className="text-teal-600 font-extrabold uppercase">SGQ</span>
+                                  {/* Dropdown 2: Select Skill related to this function */}
+                                  <div className="space-y-1">
+                                    <label className="text-[9.5px] font-bold text-slate-550 uppercase">Habilidade Aferida</label>
+                                    <select
+                                      value={assessmentForm.skillId}
+                                      onChange={e => setAssessmentForm(prev => ({ ...prev, skillId: e.target.value }))}
+                                      className="w-full p-1.5 border border-slate-250 bg-white text-xs rounded focus:outline-none"
+                                    >
+                                      <option value="">-- Selecionar Requisito Técnico --</option>
+                                      {requiredSkillsConfig.map(r => {
+                                        const s = skills.find(sk => sk.id === r.skillId);
+                                        return s ? (
+                                          <option key={s.id} value={s.id}>{s.name} {r.isMandatory ? "(Obrigatória)" : ""}</option>
+                                        ) : null;
+                                      })}
+                                      {requiredSkillsConfig.length === 0 && (
+                                        <option value="" disabled>Sem habilidades vinculadas a este cargo</option>
+                                      )}
+                                    </select>
                                   </div>
-                                  
-                                  {linkedEvidences.length === 0 ? (
-                                    <div className="p-2.5 bg-slate-50 border border-slate-100 text-[10px] rounded text-slate-500 text-center">
-                                      <span>Sem evidências vinculadas ao código UBG.</span>
+
+                                  {/* Dropdown 3: Select Competency Level */}
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <label className="text-[9.5px] font-bold text-slate-550 uppercase">Nível Aferido</label>
+                                      <select
+                                        value={assessmentForm.level}
+                                        onChange={e => setAssessmentForm(prev => ({ ...prev, level: e.target.value as CompetencyLevel }))}
+                                        className="w-full p-1.5 border border-slate-250 bg-white text-xs rounded focus:outline-none font-bold text-slate-700"
+                                      >
+                                        {Object.entries(CompetencyLabels).map(([lvl, lbl]) => (
+                                          <option key={lvl} value={lvl}>{lbl}</option>
+                                        ))}
+                                      </select>
                                     </div>
-                                  ) : (
-                                    <div className="space-y-1.5 max-h-[105px] overflow-y-auto pr-1">
-                                      {linkedEvidences.map(ev => (
-                                        <div key={ev.id} className="p-2 border border-slate-200 rounded bg-slate-50/50 hover:bg-slate-50 flex items-center justify-between text-[10px] gap-2">
-                                          <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-1 font-bold text-[9px]">
-                                              <span className="text-teal-700 font-mono">{ev.codigoDocumentoUBG}</span>
-                                              <span className="text-slate-350">|</span>
-                                              <span className="text-slate-600 truncate" title={ev.descricaoDocumento}>{ev.descricaoDocumento}</span>
-                                            </div>
-                                            <p className="text-slate-400 text-[8.5px] mt-0.5">Cláusula SGQ: {ev.requisitoISO}</p>
-                                          </div>
-                                          <div>
-                                            <select
-                                              value={ev.status}
-                                              onChange={(e) => onUpdateEvidenciaStatus(ev.id, e.target.value as any)}
-                                              className={`p-1 text-[9px] rounded font-bold border ${
-                                                ev.status === "Validada" 
-                                                  ? "bg-teal-50 border-teal-150 text-teal-700" 
-                                                  : ev.status === "Em Análise" 
-                                                  ? "bg-amber-50 border-amber-150 text-amber-700" 
-                                                  : "bg-slate-100 border-slate-250 text-slate-655"
-                                              }`}
-                                            >
-                                              <option value="Pendente">Pendente</option>
-                                              <option value="Em Análise">Em Análise</option>
-                                              <option value="Validada">Validada</option>
-                                            </select>
-                                          </div>
-                                        </div>
-                                      ))}
+
+                                    {/* Input: Document verification code */}
+                                    <div className="space-y-1">
+                                      <label className="text-[9.5px] font-bold text-slate-550 uppercase">Ficha UBG Assinada</label>
+                                      <input
+                                        type="text"
+                                        placeholder="Ex: Ficha UBG-098"
+                                        value={assessmentForm.evidenceUrl}
+                                        onChange={e => setAssessmentForm(prev => ({ ...prev, evidenceUrl: e.target.value }))}
+                                        className="w-full p-1.5 border border-slate-250 bg-white text-xs rounded focus:outline-none font-mono"
+                                      />
                                     </div>
-                                  )}
+                                  </div>
+
+                                  <button
+                                    onClick={() => handleRegisterAssessment(f)}
+                                    className="w-full py-2 bg-indigo-650 hover:bg-indigo-700 text-white rounded font-bold transition-all shadow cursor-pointer border-0 mt-1 uppercase text-[10px]"
+                                  >
+                                    Salvar Laudo de Auditoria
+                                  </button>
                                 </div>
 
                               </div>
 
                             </div>
 
-                            {/* Additional critical outputs */}
-                            <div className="mt-4 pt-3 border-t border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                              <div><strong>Ação de Instrução:</strong> <span className="text-slate-600 normal-case font-medium block mt-0.5">{f.necessidadeIT}</span></div>
-                              <div><strong>Plano de Treinamento:</strong> <span className="text-slate-600 normal-case font-medium block mt-0.5">{f.necessidadeTreinamento}</span></div>
-                              <div><strong>Ficha Sucessora:</strong> <span className="text-slate-600 normal-case font-medium block mt-0.5">{f.necessidadeSucessao}</span></div>
+                            {/* Technical Gaps Watchlist */}
+                            <div className="mt-4 pt-3 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6 text-[10px]">
+                              
+                              {/* Left column: Missing Gaps for registered operators */}
+                              <div>
+                                <span className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Relatório de Gaps de Habilidade da Função</span>
+                                <div className="space-y-1.5 max-h-[100px] overflow-y-auto">
+                                  {[...mainOps, ...backupOps].map(colab => {
+                                    const gaps = selectSkillGapsForFunction(f, colab);
+                                    if (gaps.length === 0) return null;
+                                    return (
+                                      <div key={colab.id} className="p-2 border border-slate-150 rounded bg-[#F8FAFC]">
+                                        <span className="font-bold text-slate-750 block">{colab.name} (Pendente)</span>
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                          {gaps.map(g => {
+                                            const sk = skills.find(s => s.id === g.skillId);
+                                            return (
+                                              <span key={g.skillId} className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold border border-rose-100 text-[8.5px]">
+                                                Falta {sk?.name || g.skillId} ({g.requiredLevel})
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  {[...mainOps, ...backupOps].every(c => selectSkillGapsForFunction(f, c).length === 0) && (
+                                    <p className="text-slate-400 italic text-[11px] leading-relaxed">Nenhum gap detectado nos operadores ativos.</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Right column: Best Succession Candidates available in the plant */}
+                              <div>
+                                <span className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Candidatos a Backup Próximos de Qualificação</span>
+                                <div className="space-y-1.5 max-h-[100px] overflow-y-auto">
+                                  {selectBackupCandidatesForFunction(f, collaborators, evidencias, acoes).slice(0, 3).map(cnd => (
+                                    <div key={cnd.collaborator.id} className="p-2 border border-slate-200 rounded bg-white flex items-center justify-between">
+                                      <div>
+                                        <span className="font-bold text-slate-800 block">{cnd.collaborator.name}</span>
+                                        <span className="text-slate-450 block text-[8.5px] mt-0.5">Cargo: {skills.find(s => s.id === cnd.collaborator.primaryFunctionId)?.name || cnd.collaborator.primaryFunctionId}</span>
+                                      </div>
+                                      <div className="text-right shrink-0">
+                                        <span className="text-indigo-600 font-bold font-mono">{cnd.completedSkillsCount} / {(f.requiredSkills || []).length}</span>
+                                        <span className="block text-slate-400 text-[8px] font-bold uppercase">Habilidades completas</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {selectBackupCandidatesForFunction(f, collaborators, evidencias, acoes).length === 0 && (
+                                    <p className="text-slate-400 italic text-[11px] leading-relaxed">Nenhum candidato mapeado para a sucessão técnica.</p>
+                                  )}
+                                </div>
+                              </div>
+
                             </div>
 
                           </td>
@@ -646,11 +750,10 @@ export default function RankingVulnerabilidade({
         </div>
       </div>
 
-      {/* FOOTER INFO CORRESPONDENCE */}
       <div className="text-[11px] text-slate-500 bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm font-semibold">
         <Sparkles className="w-5 h-5 shrink-0 text-indigo-500 animate-pulse-slow" />
         <span>
-          <strong className="text-slate-700">Painel Integrado RJT:</strong> Clique em qualquer linha para abrir a <strong className="text-indigo-650">Ficha Unificada de Competência & Sucessão</strong>. Nela, você pode visualizar a maturidade da função, alertas ativos e gerenciar status de planos PDCA e evidências ISO diretamente.
+          <strong className="text-slate-700">Painel Integrado RJT:</strong> Clique em qualquer linha para abrir a <strong className="text-indigo-650">Ficha Unificada de Competência & Sucessão</strong>. Nela, você pode visualizar a maturidade da função, alertas ativos, preencher e salvar o laudo prático de auditoria para os operadores em tempo real!
         </span>
       </div>
 

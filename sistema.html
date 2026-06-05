@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>RJT Nexus People — Sistema SGQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060609;--surface:#0D0D16;--surface2:#111119;--sidebar:#09090F;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --blue:#2563EB;--blue-l:#3B82F6;--cyan:#06B6D4;
+  --green:#10B981;--amber:#F59E0B;--red:#EF4444;
+  --white:#F1F5F9;--gray:#64748B;--gray-l:#94A3B8;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--white);overflow:hidden;height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+select option{background:#0C0C14;color:#f1f5f9}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:216px;flex-shrink:0;height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.brand{padding:18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.brand-icon{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#2563EB,#06B6D4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 0 16px rgba(37,99,235,0.35)}
+.brand-name{font-size:13px;font-weight:800;color:#fff;letter-spacing:-.3px;line-height:1}
+.brand-sub{font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px}
+.nav{flex:1;overflow-y:auto;padding:12px 10px}
+.nav-section{margin-bottom:18px}
+.nav-section-header{display:flex;align-items:center;justify-content:space-between;padding:0 8px;margin-bottom:4px}
+.nav-section-label{font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1.5px}
+.nav-pdca{font-size:8px;font-family:'JetBrains Mono',monospace;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.15);color:#93C5FD;border:1px solid rgba(37,99,235,0.25)}
+.nav-item{width:100%;display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;font-size:11.5px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:all .15s;background:transparent;color:rgba(255,255,255,0.4);text-align:left;line-height:1}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8)}
+.nav-item.active{background:rgba(37,99,235,0.15);color:#93C5FD;border-color:rgba(37,99,235,0.3)}
+.nav-icon{font-size:13px;flex-shrink:0;opacity:.7}
+.nav-item.active .nav-icon{opacity:1}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:#3B82F6;margin-left:auto;flex-shrink:0}
+.sidebar-footer{padding:14px;border-top:1px solid var(--border)}
+.tenant-info{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.tenant-avatar{width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,0.2);border:1px solid rgba(37,99,235,0.3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#93C5FD;flex-shrink:0}
+.tenant-name{font-size:11px;font-weight:700;color:#fff}
+.tenant-sub{font-size:9px;color:rgba(255,255,255,0.3);font-family:'JetBrains Mono',monospace}
+.status-line{display:flex;align-items:center;gap:6px;font-size:9px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.25)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 6px #10B981;flex-shrink:0}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:52px;background:rgba(9,9,15,.95);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-accent{width:2px;height:16px;border-radius:2px;background:linear-gradient(180deg,#2563EB,#06B6D4);flex-shrink:0}
+.page-title{font-size:13px;font-weight:700;color:#fff;line-height:1}
+.page-iso{font-size:9px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.3);margin-top:3px}
+.topbar-chips{display:flex;align-items:center;gap:8px}
+.chip{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600}
+.chip-blue{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.45)}
+.chip-green{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);color:#34D399}
+.bell{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;color:rgba(255,255,255,0.4);font-size:13px}
+.bell-dot{position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:50%;background:#2563EB;box-shadow:0 0 6px #2563EB}
+.content{flex:1;overflow-y:auto;padding:28px;background:linear-gradient(160deg,#08080F 0%,#060609 60%,#08060E 100%)}
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── COMPONENTS ── */
+.page-header{margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.page-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:9.5px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(37,99,235,0.12);color:#93C5FD;border:1px solid rgba(37,99,235,0.25);margin-bottom:10px;letter-spacing:.3px}
+.page-title-h1{font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:6px}
+.page-desc{font-size:12.5px;color:var(--gray-l);line-height:1.6}
+.page-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.tenant-select{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);padding:8px 14px;border-radius:10px;border:1px solid var(--border)}
+.tenant-select select{background:transparent;border:none;color:#fff;font-size:11px;font-weight:700;outline:none;cursor:pointer;font-family:'Inter',sans-serif}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.kpi-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:18px 16px;position:relative;overflow:hidden;transition:all .2s;cursor:default}
+.kpi-card:hover{border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#2563EB,#06B6D4);opacity:0;transition:opacity .2s}
+.kpi-card:hover::before{opacity:1}
+.kpi-label{font-size:9.5px;font-family:'JetBrains Mono',monospace;font-weight:600;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.kpi-value{font-size:26px;font-weight:900;letter-spacing:-1.5px;color:#fff}
+.kpi-tag{display:inline-flex;margin-top:8px;padding:2px 8px;border-radius:5px;font-size:9.5px;font-weight:600}
+.kpi-tag-green{background:rgba(16,185,129,0.1);color:#34D399;border:1px solid rgba(16,185,129,0.2)}
+.kpi-tag-red{background:rgba(239,68,68,0.1);color:#F87171;border:1px solid rgba(239,68,68,0.2)}
+.kpi-tag-amber{background:rgba(245,158,11,0.1);color:#FCD34D;border:1px solid rgba(245,158,11,0.2)}
+.kpi-tag-blue{background:rgba(37,99,235,0.1);color:#93C5FD;border:1px solid rgba(37,99,235,0.2)}
+.kpi-icon{position:absolute;top:16px;right:16px;font-size:20px;opacity:.5}
+
+.card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02)}
+.card-title{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px}
+.card-body{padding:20px}
+.card-count{font-size:10px;font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,0.06);padding:3px 10px;border-radius:100px;color:rgba(255,255,255,0.4)}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:10px 14px;text-align:left;font-size:9.5px;font-family:'JetBrains Mono',monospace;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)}
+td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--gray-l);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.td-bold{color:#fff;font-weight:600}
+.td-mono{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#93C5FD}
+
+.badge{display:inline-flex;padding:2px 9px;border-radius:5px;font-size:9.5px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.badge-op{background:rgba(6,182,212,0.12);color:#67E8F9;border:1px solid rgba(6,182,212,0.25)}
+.badge-backup{background:rgba(37,99,235,0.12);color:#93C5FD;border:1px solid rgba(37,99,235,0.25)}
+.badge-train{background:rgba(245,158,11,0.12);color:#FCD34D;border:1px solid rgba(245,158,11,0.25)}
+.badge-none{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.08)}
+.badge-green{background:rgba(16,185,129,0.12);color:#34D399;border:1px solid rgba(16,185,129,0.25)}
+.badge-red{background:rgba(239,68,68,0.12);color:#F87171;border:1px solid rgba(239,68,68,0.25)}
+.badge-amber{background:rgba(245,158,11,0.12);color:#FCD34D;border:1px solid rgba(245,158,11,0.25)}
+.badge-crit{background:rgba(239,68,68,0.15);color:#FCA5A5;border:1px solid rgba(239,68,68,0.3)}
+.badge-high{background:rgba(245,158,11,0.15);color:#FDE68A;border:1px solid rgba(245,158,11,0.3)}
+.badge-med{background:rgba(37,99,235,0.15);color:#BFDBFE;border:1px solid rgba(37,99,235,0.3)}
+.badge-low{background:rgba(16,185,129,0.12);color:#A7F3D0;border:1px solid rgba(16,185,129,0.25)}
+.badge-pending{background:rgba(245,158,11,0.1);color:#FCD34D;border:1px solid rgba(245,158,11,0.2)}
+.badge-progress{background:rgba(37,99,235,0.1);color:#93C5FD;border:1px solid rgba(37,99,235,0.2)}
+.badge-done{background:rgba(16,185,129,0.1);color:#34D399;border:1px solid rgba(16,185,129,0.2)}
+.badge-risk{background:rgba(239,68,68,0.1);color:#F87171;border:1px solid rgba(239,68,68,0.2)}
+
+.progress-bar{height:5px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#2563EB,#06B6D4)}
+.progress-fill-red{background:linear-gradient(90deg,#EF4444,#F97316)}
+.progress-fill-green{background:linear-gradient(90deg,#10B981,#06B6D4)}
+
+.search-box{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:8px 14px;max-width:320px;margin-bottom:20px}
+.search-box input{background:transparent;border:none;color:#fff;font-size:12px;outline:none;width:100%;font-family:'Inter',sans-serif}
+.search-box input::placeholder{color:rgba(255,255,255,0.25)}
+
+.row-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.row-item:last-child{border-bottom:none}
+
+.risk-score{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;font-size:13px;font-weight:900;font-family:'JetBrains Mono',monospace}
+.score-crit{background:rgba(239,68,68,0.15);color:#F87171;border:1px solid rgba(239,68,68,0.3)}
+.score-high{background:rgba(245,158,11,0.15);color:#FCD34D;border:1px solid rgba(245,158,11,0.3)}
+.score-med{background:rgba(37,99,235,0.15);color:#93C5FD;border:1px solid rgba(37,99,235,0.3)}
+.score-low{background:rgba(16,185,129,0.12);color:#34D399;border:1px solid rgba(16,185,129,0.25)}
+
+/* Matrix grid */
+.matrix-cell{text-align:center;padding:9px 8px}
+.circle-op{display:inline-flex;width:28px;height:28px;border-radius:50%;background:rgba(6,182,212,0.2);border:2px solid rgba(6,182,212,0.5);align-items:center;justify-content:center;font-size:11px;color:#67E8F9}
+.circle-bk{display:inline-flex;width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,0.2);border:2px solid rgba(37,99,235,0.4);align-items:center;justify-content:center;font-size:11px;color:#93C5FD}
+.circle-tr{display:inline-flex;width:28px;height:28px;border-radius:50%;background:rgba(245,158,11,0.15);border:2px dashed rgba(245,158,11,0.4);align-items:center;justify-content:center;font-size:11px;color:#FCD34D}
+.circle-no{display:inline-flex;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);align-items:center;justify-content:center;font-size:11px;color:rgba(255,255,255,0.2)}
+
+/* PDCA specific */
+.pdca-action{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.pdca-action-header{padding:14px 18px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.pdca-action-title{font-size:12px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+.pdca-progress-wrap{display:flex;align-items:center;gap:10px}
+.pdca-pct{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#93C5FD}
+.pdca-progress-mini{width:80px}
+.pdca-rows{padding:0}
+.pdca-row{display:grid;grid-template-columns:80px 1fr 100px 80px 80px 100px;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.03);align-items:center;font-size:11.5px}
+.pdca-row:last-child{border-bottom:none}
+.pdca-row:hover{background:rgba(255,255,255,0.02)}
+.pdca-id{font-family:'JetBrains Mono',monospace;font-size:10px;color:#60A5FA;font-weight:700}
+.pdca-subacao{color:var(--gray-l);font-weight:500}
+.pdca-resp{font-size:10.5px;color:rgba(255,255,255,0.45)}
+.pdca-prazo{font-size:10.5px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.35)}
+.pdca-evidencia{font-size:10px;color:rgba(255,255,255,0.3)}
+.pdca-header-row{display:grid;grid-template-columns:80px 1fr 100px 80px 80px 100px;gap:10px;padding:8px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)}
+.pdca-col-label{font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:.8px}
+
+/* Health score */
+.health-ring{position:relative;width:140px;height:140px;flex-shrink:0}
+.health-ring svg{transform:rotate(-90deg)}
+.health-ring-value{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.health-ring-num{font-size:32px;font-weight:900;letter-spacing:-2px;color:#fff}
+.health-ring-label{font-size:9px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px}
+
+/* Vuln bar */
+.vuln-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.vuln-row:last-child{border-bottom:none}
+.vuln-rank{width:20px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.3);font-family:'JetBrains Mono',monospace;text-align:right}
+.vuln-name{flex:1;font-size:12px;font-weight:600;color:var(--gray-l)}
+.vuln-score{font-size:11px;font-weight:800;font-family:'JetBrains Mono',monospace;width:32px;text-align:right}
+.vuln-bar-wrap{width:100px}
+
+/* Evidence */
+.ev-status-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border);margin-bottom:8px}
+.ev-file{font-size:11px;font-weight:600;color:#fff;flex:1;truncate:1}
+.ev-date{font-size:10px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.3)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">NP</div>
+    <div>
+      <div class="brand-name">Nexus People</div>
+      <div class="brand-sub">RJT · ISO 9001</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">
+      <div class="nav-section-header"><span class="nav-section-label">Visão Geral</span></div>
+      <button class="nav-item active" onclick="show('dashboard',this)"><span class="nav-icon">⚡</span>Dashboard<span class="nav-dot"></span></button>
+      <button class="nav-item" onclick="show('intelligence',this)"><span class="nav-icon">🧠</span>People Intelligence</button>
+      <button class="nav-item" onclick="show('import',this)"><span class="nav-icon">⬆</span>Import Center</button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-header"><span class="nav-section-label">Estrutura Operacional</span><span class="nav-pdca">Ação 01–02</span></div>
+      <button class="nav-item" onclick="show('workforce',this)"><span class="nav-icon">🗺</span>Workforce Map</button>
+      <button class="nav-item" onclick="show('critical',this)"><span class="nav-icon">⚠</span>Funções Críticas</button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-header"><span class="nav-section-label">Competência & Cobertura</span><span class="nav-pdca">Ação 03–05</span></div>
+      <button class="nav-item" onclick="show('polyvalence',this)"><span class="nav-icon">⊞</span>Matriz Polivalência</button>
+      <button class="nav-item" onclick="show('backup',this)"><span class="nav-icon">🛡</span>Backup Operacional</button>
+      <button class="nav-item" onclick="show('training',this)"><span class="nav-icon">🎓</span>Treinamento & OJT</button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-header"><span class="nav-section-label">Risco & Conformidade</span><span class="nav-pdca">Ação 06</span></div>
+      <button class="nav-item" onclick="show('knowledge',this)"><span class="nav-icon">📚</span>Base Conhecimento</button>
+      <button class="nav-item" onclick="show('evidence',this)"><span class="nav-icon">📁</span>Central Evidências</button>
+      <button class="nav-item" onclick="show('vuln',this)"><span class="nav-icon">📊</span>Vulnerabilidade</button>
+      <button class="nav-item" onclick="show('plans',this)"><span class="nav-icon">📋</span>Planos de Ação</button>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="tenant-info">
+      <div class="tenant-avatar">UB</div>
+      <div><div class="tenant-name">União Bag</div><div class="tenant-sub">Tenant Ativo</div></div>
+    </div>
+    <div class="status-line"><div class="status-dot"></div>Sistema Ativo · v2.0.0</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-accent"></div>
+      <div id="topbar-title-wrap">
+        <div class="page-title" id="topbar-title">Dashboard Executivo</div>
+        <div class="page-iso" id="topbar-iso">PDCA Brain · ISO 9001:2015 · Visão Geral</div>
+      </div>
+    </div>
+    <div class="topbar-chips">
+      <div class="chip chip-blue">🏭 União Bag</div>
+      <div class="chip chip-green">✓ ISO 9001:2015</div>
+      <div class="bell">🔔<div class="bell-dot"></div></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header page-header-row">
+    <div>
+      <div class="page-badge">PDCA Brain · ISO 9001:2015</div>
+      <div class="page-title-h1">Dashboard Executivo</div>
+      <div class="page-desc">Visão consolidada de conformidade ISO, riscos operacionais, competências e efetividade do ciclo PDCA.</div>
+    </div>
+    <div class="tenant-select"><select><option>União Bag Demo Tenant</option></select></div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Score de Continuidade</div><div class="kpi-value">72<span style="font-size:14px;font-weight:500;color:var(--gray-l)">%</span></div><div class="kpi-tag kpi-tag-amber">⚠ Atenção</div><div class="kpi-icon">🛡</div></div>
+    <div class="kpi-card"><div class="kpi-label">Funções Críticas</div><div class="kpi-value">18</div><div class="kpi-tag kpi-tag-red">5 sem backup</div><div class="kpi-icon">⚠</div></div>
+    <div class="kpi-card"><div class="kpi-label">Polivalência Média</div><div class="kpi-value">1.4</div><div class="kpi-tag kpi-tag-blue">índice por função</div><div class="kpi-icon">⊞</div></div>
+    <div class="kpi-card"><div class="kpi-label">Efetividade PDCA</div><div class="kpi-value">0<span style="font-size:14px;font-weight:500;color:var(--gray-l)">%</span></div><div class="kpi-tag kpi-tag-amber">36 subações pendentes</div><div class="kpi-icon">📋</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-header"><div class="card-title">🏥 Saúde Organizacional</div></div>
+      <div class="card-body" style="display:flex;align-items:center;gap:24px">
+        <div class="health-ring">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="56" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="10"/>
+            <circle cx="70" cy="70" r="56" fill="none" stroke="#F59E0B" stroke-width="10" stroke-dasharray="351.9" stroke-dashoffset="98" stroke-linecap="round"/>
+          </svg>
+          <div class="health-ring-value"><div class="health-ring-num">72</div><div class="health-ring-label">Score</div></div>
+        </div>
+        <div style="flex:1">
+          <div class="row-item"><span style="font-size:12px;color:var(--gray-l)">Backup Coverage</span><span style="font-size:12px;font-weight:700;color:#F87171">40%</span></div>
+          <div class="row-item"><span style="font-size:12px;color:var(--gray-l)">Polivalência</span><span style="font-size:12px;font-weight:700;color:#FCD34D">65%</span></div>
+          <div class="row-item"><span style="font-size:12px;color:var(--gray-l)">Treinamentos</span><span style="font-size:12px;font-weight:700;color:#34D399">82%</span></div>
+          <div class="row-item"><span style="font-size:12px;color:var(--gray-l)">Evidências ISO</span><span style="font-size:12px;font-weight:700;color:#93C5FD">55%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">🔴 Top Vulnerabilidades</div></div>
+      <div class="card-body">
+        <div class="vuln-row"><div class="vuln-rank">1</div><div class="vuln-name">Setup Corte Automático</div><div class="vuln-bar-wrap"><div class="progress-bar"><div class="progress-fill-red" style="width:90%;height:100%"></div></div></div><div class="vuln-score" style="color:#F87171">90</div></div>
+        <div class="vuln-row"><div class="vuln-rank">2</div><div class="vuln-name">Costura Especial</div><div class="vuln-bar-wrap"><div class="progress-bar"><div class="progress-fill-red" style="width:78%;height:100%"></div></div></div><div class="vuln-score" style="color:#F87171">78</div></div>
+        <div class="vuln-row"><div class="vuln-rank">3</div><div class="vuln-name">Operação Expedição</div><div class="vuln-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:62%;height:100%;background:linear-gradient(90deg,#F59E0B,#F97316)"></div></div></div><div class="vuln-score" style="color:#FCD34D">62</div></div>
+        <div class="vuln-row"><div class="vuln-rank">4</div><div class="vuln-name">Controle Qualidade</div><div class="vuln-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:45%;height:100%;background:linear-gradient(90deg,#2563EB,#06B6D4)"></div></div></div><div class="vuln-score" style="color:#93C5FD">45</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">📋 PDCA 01 — Resumo de Progresso</div><div class="card-count">0 / 36 concluídas</div></div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">
+        <div style="text-align:center;padding:14px 10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA;font-weight:700;margin-bottom:6px">AÇÃO 01</div><div style="font-size:18px;font-weight:900;color:#fff">0<span style="font-size:11px;color:var(--gray-l)">/6</span></div><div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px">Gestão Conhec.</div></div>
+        <div style="text-align:center;padding:14px 10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA;font-weight:700;margin-bottom:6px">AÇÃO 02</div><div style="font-size:18px;font-weight:900;color:#fff">0<span style="font-size:11px;color:var(--gray-l)">/6</span></div><div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px">Funções Críticas</div></div>
+        <div style="text-align:center;padding:14px 10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA;font-weight:700;margin-bottom:6px">AÇÃO 03</div><div style="font-size:18px;font-weight:900;color:#fff">0<span style="font-size:11px;color:var(--gray-l)">/6</span></div><div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px">Matriz Competência</div></div>
+        <div style="text-align:center;padding:14px 10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA;font-weight:700;margin-bottom:6px">AÇÃO 04</div><div style="font-size:18px;font-weight:900;color:#fff">0<span style="font-size:11px;color:var(--gray-l)">/6</span></div><div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px">Instruções Trabalho</div></div>
+        <div style="text-align:center;padding:14px 10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA;font-weight:700;margin-bottom:6px">AÇÃO 05</div><div style="font-size:18px;font-weight:900;color:#fff">0<span style="font-size:11px;color:var(--gray-l)">/6</span></div><div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px">Multiplicação Téc.</div></div>
+        <div style="text-align:center;padding:14px 10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA;font-weight:700;margin-bottom:6px">AÇÃO 06</div><div style="font-size:18px;font-weight:900;color:#fff">0<span style="font-size:11px;color:var(--gray-l)">/6</span></div><div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px">Consolidação</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ FUNÇÕES CRÍTICAS ═══════════════════ -->
+<div class="page" id="page-critical">
+  <div class="page-header page-header-row">
+    <div><div class="page-badge">PDCA Ação 02 · ISO 6.1 · 7.2</div><div class="page-title-h1">Funções Críticas</div><div class="page-desc">Identifique dependência técnica, avalie risco GUT e mapeie funções sem backup operacional validado.</div></div>
+    <div class="tenant-select"><select><option>União Bag Demo Tenant</option></select></div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Total Funções Críticas</div><div class="kpi-value">18</div><div class="kpi-tag kpi-tag-blue">mapeadas</div></div>
+    <div class="kpi-card"><div class="kpi-label">Classificação CRÍTICA</div><div class="kpi-value">4</div><div class="kpi-tag kpi-tag-red">GUT ≥ 80</div></div>
+    <div class="kpi-card"><div class="kpi-label">Sem Backup Ativo</div><div class="kpi-value">5</div><div class="kpi-tag kpi-tag-red">SPOF identificado</div></div>
+    <div class="kpi-card"><div class="kpi-label">Alta Exposição</div><div class="kpi-value">7</div><div class="kpi-tag kpi-tag-amber">requer ação imediata</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">⚠ Matriz de Funções · GUT Score</div><div class="card-count">18 funções</div></div>
+    <table>
+      <thead><tr><th>Código</th><th>Função</th><th>Setor</th><th>Operador Principal</th><th>Backups</th><th>GUT Score</th><th>Classificação</th></tr></thead>
+      <tbody>
+        <tr><td class="td-mono">UBG-001</td><td class="td-bold">Setup Corte Automático</td><td>Corte</td><td>Kaiky Principal</td><td><span class="badge badge-red">0 backups</span></td><td><div class="risk-score score-crit">90</div></td><td><span class="badge badge-crit">CRÍTICA</span></td></tr>
+        <tr><td class="td-mono">UBG-002</td><td class="td-bold">Costura Especial Sacos</td><td>Costura</td><td>Maria Costureira</td><td><span class="badge badge-amber">1 backup</span></td><td><div class="risk-score score-crit">81</div></td><td><span class="badge badge-crit">CRÍTICA</span></td></tr>
+        <tr><td class="td-mono">UBG-003</td><td class="td-bold">Op. Expedição</td><td>Expedição</td><td>Roberto Expeditor</td><td><span class="badge badge-green">2 backups</span></td><td><div class="risk-score score-high">64</div></td><td><span class="badge badge-high">ALTA</span></td></tr>
+        <tr><td class="td-mono">UBG-004</td><td class="td-bold">Controle de Qualidade</td><td>Qualidade</td><td>Ana Qualidade</td><td><span class="badge badge-amber">1 backup</span></td><td><div class="risk-score score-high">54</div></td><td><span class="badge badge-high">ALTA</span></td></tr>
+        <tr><td class="td-mono">UBG-005</td><td class="td-bold">Manutenção Preventiva</td><td>Manutenção</td><td>Carlos Mecânico</td><td><span class="badge badge-red">0 backups</span></td><td><div class="risk-score score-high">72</div></td><td><span class="badge badge-crit">CRÍTICA</span></td></tr>
+        <tr><td class="td-mono">UBG-006</td><td class="td-bold">Almoxarifado</td><td>Logística</td><td>Pedro Estoque</td><td><span class="badge badge-green">2 backups</span></td><td><div class="risk-score score-med">36</div></td><td><span class="badge badge-med">MÉDIA</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ MATRIZ POLIVALÊNCIA ═══════════════════ -->
+<div class="page" id="page-polyvalence">
+  <div class="page-header page-header-row">
+    <div><div class="page-badge">PDCA Ação 03 · ISO 7.2</div><div class="page-title-h1">Matriz de Polivalência</div><div class="page-desc">Mapeie competências por função, identifique lacunas de treinamento e pontos únicos de falha operacional.</div></div>
+    <div class="tenant-select"><select><option>União Bag Demo Tenant</option></select></div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Índice Polivalência</div><div class="kpi-value">1.4</div><div class="kpi-tag kpi-tag-amber">meta: 2.0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Colaboradores Polivalentes</div><div class="kpi-value">2 / 5</div><div class="kpi-tag kpi-tag-blue">multifunção</div></div>
+    <div class="kpi-card"><div class="kpi-label">SPOF Identificados</div><div class="kpi-value">3</div><div class="kpi-tag kpi-tag-red">0 backup ativo</div></div>
+    <div class="kpi-card"><div class="kpi-label">Lacunas Treinamento</div><div class="kpi-value">8</div><div class="kpi-tag kpi-tag-amber">gaps mapeados</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">⊞ Colaborador × Função</div><div style="display:flex;gap:10px;font-size:10px;font-family:'JetBrains Mono',monospace"><span style="color:#67E8F9">● Operacional</span><span style="color:#93C5FD">● Backup</span><span style="color:#FCD34D">● Treinamento</span><span style="color:rgba(255,255,255,0.2)">○ —</span></div></div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Colaborador</th><th>Setor</th><th class="matrix-cell">Setup Corte</th><th class="matrix-cell">Costura Esp.</th><th class="matrix-cell">Expedição</th><th class="matrix-cell">Controle Q.</th><th class="matrix-cell">Manutenção</th><th>Funções Val.</th></tr></thead>
+        <tbody>
+          <tr><td class="td-bold">Kaiky Principal</td><td style="font-size:11px;color:var(--gray-l)">Corte</td><td class="matrix-cell"><div class="circle-op">●</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-bk">◑</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td><span class="badge badge-blue">2</span></td></tr>
+          <tr><td class="td-bold">Eliane Backup</td><td style="font-size:11px;color:var(--gray-l)">Costura</td><td class="matrix-cell"><div class="circle-bk">◑</div></td><td class="matrix-cell"><div class="circle-op">●</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-tr">△</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td><span class="badge badge-blue">3</span></td></tr>
+          <tr><td class="td-bold">Arthur Apprentice</td><td style="font-size:11px;color:var(--gray-l)">Corte</td><td class="matrix-cell"><div class="circle-tr">△</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td><span class="badge badge-none">1</span></td></tr>
+          <tr><td class="td-bold">Roberto Expeditor</td><td style="font-size:11px;color:var(--gray-l)">Expedição</td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-op">●</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td><span class="badge badge-none">1</span></td></tr>
+          <tr><td class="td-bold">João Silva Manager</td><td style="font-size:11px;color:var(--gray-l)">Administrativo</td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td class="matrix-cell"><div class="circle-bk">◑</div></td><td class="matrix-cell"><div class="circle-no">○</div></td><td><span class="badge badge-none">1</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ BACKUP OPERACIONAL ═══════════════════ -->
+<div class="page" id="page-backup">
+  <div class="page-header page-header-row">
+    <div><div class="page-badge">PDCA Ação 05 · ISO 7.2 · 7.3</div><div class="page-title-h1">Backup Operacional</div><div class="page-desc">Controle pares de backup por função crítica, planos de sucessão e eliminação de pontos únicos de falha.</div></div>
+    <div class="tenant-select"><select><option>União Bag Demo Tenant</option></select></div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Funções com Backup Ativo</div><div class="kpi-value">13</div><div class="kpi-tag kpi-tag-blue">de 18 funções</div></div>
+    <div class="kpi-card"><div class="kpi-label">Funções sem Backup</div><div class="kpi-value">5</div><div class="kpi-tag kpi-tag-red">risco crítico</div></div>
+    <div class="kpi-card"><div class="kpi-label">Em Treinamento Backup</div><div class="kpi-value">3</div><div class="kpi-tag kpi-tag-amber">in_training</div></div>
+    <div class="kpi-card"><div class="kpi-label">Cobertura Geral</div><div class="kpi-value">72%</div><div class="kpi-tag kpi-tag-amber">meta: 100%</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">🛡 Cobertura por Função Crítica</div></div>
+    <table>
+      <thead><tr><th>Código</th><th>Função</th><th>Operador Principal</th><th>Backups Ativos</th><th>Em Treinamento</th><th>Gap</th><th>Cobertura</th></tr></thead>
+      <tbody>
+        <tr><td class="td-mono">UBG-001</td><td class="td-bold">Setup Corte Automático</td><td>Kaiky Principal</td><td><span class="badge badge-red">0</span></td><td><span class="badge badge-amber">1</span></td><td><span class="badge badge-red">-2</span></td><td><div class="progress-bar" style="width:80px"><div class="progress-fill-red" style="width:10%;height:100%"></div></div></td></tr>
+        <tr><td class="td-mono">UBG-002</td><td class="td-bold">Costura Especial</td><td>Maria Costureira</td><td><span class="badge badge-amber">1</span></td><td><span class="badge badge-amber">1</span></td><td><span class="badge badge-amber">-1</span></td><td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:50%;height:100%;background:linear-gradient(90deg,#F59E0B,#F97316)"></div></div></td></tr>
+        <tr><td class="td-mono">UBG-003</td><td class="td-bold">Op. Expedição</td><td>Roberto Expeditor</td><td><span class="badge badge-green">2</span></td><td><span class="badge badge-none">0</span></td><td><span class="badge badge-green">ok</span></td><td><div class="progress-bar" style="width:80px"><div class="progress-fill-green" style="width:100%;height:100%"></div></div></td></tr>
+        <tr><td class="td-mono">UBG-005</td><td class="td-bold">Manutenção Preventiva</td><td>Carlos Mecânico</td><td><span class="badge badge-red">0</span></td><td><span class="badge badge-none">0</span></td><td><span class="badge badge-red">-2</span></td><td><div class="progress-bar" style="width:80px"><div class="progress-fill-red" style="width:0%;height:100%"></div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ PLANOS DE AÇÃO / PDCA ═══════════════════ -->
+<div class="page" id="page-plans">
+  <div class="page-header page-header-row">
+    <div><div class="page-badge">PDCA Ação 06 · ISO 9.3 · Ciclo PDCA</div><div class="page-title-h1">Planos de Ação</div><div class="page-desc">36 subações do PDCA 01 — Gestão do Conhecimento Técnico. Progresso calculado por evidências validadas.</div></div>
+    <div class="tenant-select"><select><option>União Bag Demo Tenant</option></select></div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Total Subações</div><div class="kpi-value">36</div><div class="kpi-tag kpi-tag-blue">6 ações macro</div></div>
+    <div class="kpi-card"><div class="kpi-label">Concluídas</div><div class="kpi-value">0</div><div class="kpi-tag kpi-tag-amber">com evidência validada</div></div>
+    <div class="kpi-card"><div class="kpi-label">Pendentes</div><div class="kpi-value">36</div><div class="kpi-tag kpi-tag-amber">aguardando execução</div></div>
+    <div class="kpi-card"><div class="kpi-label">Efetividade</div><div class="kpi-value">0%</div><div class="kpi-tag kpi-tag-red">meta: ≥ 80%</div></div>
+  </div>
+  <!-- REGRA -->
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:10px;margin-bottom:20px;font-size:11.5px;color:#93C5FD;font-family:'JetBrains Mono',monospace;font-weight:700">
+    ⚡ REGRA FUNDAMENTAL: SEM EVIDÊNCIA, NÃO EXISTE EXECUÇÃO
+  </div>
+
+  <!-- AÇÃO 01 -->
+  <div class="pdca-action">
+    <div class="pdca-action-header" onclick="togglePdca(this)">
+      <div class="pdca-action-title"><span style="font-size:14px">🔵</span> AÇÃO 01 — Formalizar Programa de Gestão do Conhecimento <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA">ISO 7.1.6</span></div>
+      <div class="pdca-progress-wrap"><div class="pdca-pct">0%</div><div class="pdca-progress-mini progress-bar"><div class="progress-fill-red" style="width:0%;height:100%"></div></div></div>
+    </div>
+    <div class="pdca-header-row"><div class="pdca-col-label">ID</div><div class="pdca-col-label">Subação</div><div class="pdca-col-label">Responsável</div><div class="pdca-col-label">Prazo</div><div class="pdca-col-label">Evidência</div><div class="pdca-col-label">Status</div></div>
+    <div class="pdca-rows">
+      <div class="pdca-row"><div class="pdca-id">01.01</div><div class="pdca-subacao">Levantar riscos técnicos</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Abril</div><div class="pdca-evidencia">Relatório</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">01.02</div><div class="pdca-subacao">Definir processos críticos</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Abril</div><div class="pdca-evidencia">Lista</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">01.03</div><div class="pdca-subacao">Definir escopo do programa</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Documento</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">01.04</div><div class="pdca-subacao">Definir responsabilidades</div><div class="pdca-resp">Diretoria</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Documento</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">01.05</div><div class="pdca-subacao">Aprovar programa</div><div class="pdca-resp">Diretoria</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Ata</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">01.06</div><div class="pdca-subacao">Controlar documento · Lista Mestra</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Lista Mestra</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+    </div>
+  </div>
+  <!-- AÇÃO 02 -->
+  <div class="pdca-action">
+    <div class="pdca-action-header" onclick="togglePdca(this)">
+      <div class="pdca-action-title"><span style="font-size:14px">🟢</span> AÇÃO 02 — Mapear Funções Técnicas Críticas <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA">ISO 6.1 · 7.2</span></div>
+      <div class="pdca-progress-wrap"><div class="pdca-pct">0%</div><div class="pdca-progress-mini progress-bar"><div class="progress-fill-red" style="width:0%;height:100%"></div></div></div>
+    </div>
+    <div class="pdca-header-row"><div class="pdca-col-label">ID</div><div class="pdca-col-label">Subação</div><div class="pdca-col-label">Responsável</div><div class="pdca-col-label">Prazo</div><div class="pdca-col-label">Evidência</div><div class="pdca-col-label">Status</div></div>
+    <div class="pdca-rows">
+      <div class="pdca-row"><div class="pdca-id">02.01</div><div class="pdca-subacao">Listar setores produtivos</div><div class="pdca-resp">RH</div><div class="pdca-prazo">Abril</div><div class="pdca-evidencia">Lista</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">02.02</div><div class="pdca-subacao">Identificar atividades críticas</div><div class="pdca-resp">RH</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Registro</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">02.03</div><div class="pdca-subacao">Identificar colaboradores-chave</div><div class="pdca-resp">RH</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Lista</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">02.04</div><div class="pdca-subacao">Avaliar dependência técnica</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Classificação</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">02.05</div><div class="pdca-subacao">Classificar risco · Matriz GUT</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Matriz</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">02.06</div><div class="pdca-subacao">Validar com gestores</div><div class="pdca-resp">Gestão</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Ata</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+    </div>
+  </div>
+  <!-- AÇÃO 03 -->
+  <div class="pdca-action">
+    <div class="pdca-action-header" onclick="togglePdca(this)">
+      <div class="pdca-action-title"><span style="font-size:14px">🟡</span> AÇÃO 03 — Matriz de Competência Técnica <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA">ISO 7.2</span></div>
+      <div class="pdca-progress-wrap"><div class="pdca-pct">0%</div><div class="pdca-progress-mini progress-bar"><div class="progress-fill-red" style="width:0%;height:100%"></div></div></div>
+    </div>
+    <div class="pdca-header-row"><div class="pdca-col-label">ID</div><div class="pdca-col-label">Subação</div><div class="pdca-col-label">Responsável</div><div class="pdca-col-label">Prazo</div><div class="pdca-col-label">Evidência</div><div class="pdca-col-label">Status</div></div>
+    <div class="pdca-rows">
+      <div class="pdca-row"><div class="pdca-id">03.01</div><div class="pdca-subacao">Definir critérios de avaliação</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Maio</div><div class="pdca-evidencia">Documento</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">03.02</div><div class="pdca-subacao">Levantar competências atuais</div><div class="pdca-resp">RH</div><div class="pdca-prazo">Junho</div><div class="pdca-evidencia">Planilha</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">03.03</div><div class="pdca-subacao">Construir matriz de competência</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Junho</div><div class="pdca-evidencia">Matriz</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">03.04</div><div class="pdca-subacao">Identificar lacunas · GAPs</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Junho</div><div class="pdca-evidencia">Relatório</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">03.05</div><div class="pdca-subacao">Priorizar ações de nivelamento</div><div class="pdca-resp">Gestão</div><div class="pdca-prazo">Junho</div><div class="pdca-evidencia">Plano</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">03.06</div><div class="pdca-subacao">Validar com diretoria</div><div class="pdca-resp">Diretoria</div><div class="pdca-prazo">Julho</div><div class="pdca-evidencia">Ata</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+    </div>
+  </div>
+  <!-- AÇÕES 04–06 RESUMIDAS -->
+  <div class="pdca-action">
+    <div class="pdca-action-header" onclick="togglePdca(this)">
+      <div class="pdca-action-title"><span style="font-size:14px">🟠</span> AÇÃO 04 — Instruções de Trabalho <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA">ISO 8.5.1</span></div>
+      <div class="pdca-progress-wrap"><div class="pdca-pct">0%</div><div class="pdca-progress-mini progress-bar"><div class="progress-fill-red" style="width:0%;height:100%"></div></div></div>
+    </div>
+    <div class="pdca-header-row"><div class="pdca-col-label">ID</div><div class="pdca-col-label">Subação</div><div class="pdca-col-label">Responsável</div><div class="pdca-col-label">Prazo</div><div class="pdca-col-label">Evidência</div><div class="pdca-col-label">Status</div></div>
+    <div class="pdca-rows">
+      <div class="pdca-row"><div class="pdca-id">04.01</div><div class="pdca-subacao">Selecionar processos prioritários</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Junho</div><div class="pdca-evidencia">Lista</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">04.02</div><div class="pdca-subacao">Definir formato padrão da IT</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Junho</div><div class="pdca-evidencia">Template</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">04.03</div><div class="pdca-subacao">Redigir ITs com operadores</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Julho</div><div class="pdca-evidencia">ITs redigidas</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">04.04</div><div class="pdca-subacao">Revisar e validar ITs</div><div class="pdca-resp">Gestão</div><div class="pdca-prazo">Julho</div><div class="pdca-evidencia">ITs revisadas</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">04.05</div><div class="pdca-subacao">Inserir na Lista Mestra</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Agosto</div><div class="pdca-evidencia">Lista Mestra</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">04.06</div><div class="pdca-subacao">Disponibilizar nos postos</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Agosto</div><div class="pdca-evidencia">Registro foto</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+    </div>
+  </div>
+  <div class="pdca-action">
+    <div class="pdca-action-header" onclick="togglePdca(this)">
+      <div class="pdca-action-title"><span style="font-size:14px">🔵</span> AÇÃO 05 — Multiplicação Técnica <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA">ISO 7.2 · 7.3</span></div>
+      <div class="pdca-progress-wrap"><div class="pdca-pct">0%</div><div class="pdca-progress-mini progress-bar"><div class="progress-fill-red" style="width:0%;height:100%"></div></div></div>
+    </div>
+    <div class="pdca-header-row"><div class="pdca-col-label">ID</div><div class="pdca-col-label">Subação</div><div class="pdca-col-label">Responsável</div><div class="pdca-col-label">Prazo</div><div class="pdca-col-label">Evidência</div><div class="pdca-col-label">Status</div></div>
+    <div class="pdca-rows">
+      <div class="pdca-row"><div class="pdca-id">05.01</div><div class="pdca-subacao">Definir pares de backup</div><div class="pdca-resp">RH</div><div class="pdca-prazo">Julho</div><div class="pdca-evidencia">Documento</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">05.02</div><div class="pdca-subacao">Elaborar plano de multiplicação</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Julho</div><div class="pdca-evidencia">Plano</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">05.03</div><div class="pdca-subacao">Executar treinamentos práticos · OJT</div><div class="pdca-resp">Gestão</div><div class="pdca-prazo">Agosto</div><div class="pdca-evidencia">Lista presença</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">05.04</div><div class="pdca-subacao">Avaliar absorção do conhecimento</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Agosto</div><div class="pdca-evidencia">Avaliação</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">05.05</div><div class="pdca-subacao">Registrar no prontuário</div><div class="pdca-resp">RH</div><div class="pdca-prazo">Agosto</div><div class="pdca-evidencia">Prontuário</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">05.06</div><div class="pdca-subacao">Confirmar backup operacional</div><div class="pdca-resp">Gestão</div><div class="pdca-prazo">Setembro</div><div class="pdca-evidencia">Registro campo</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+    </div>
+  </div>
+  <div class="pdca-action">
+    <div class="pdca-action-header" onclick="togglePdca(this)">
+      <div class="pdca-action-title"><span style="font-size:14px">🔴</span> AÇÃO 06 — Consolidação e Efetividade <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#60A5FA">ISO 9.1 · 9.3</span></div>
+      <div class="pdca-progress-wrap"><div class="pdca-pct">0%</div><div class="pdca-progress-mini progress-bar"><div class="progress-fill-red" style="width:0%;height:100%"></div></div></div>
+    </div>
+    <div class="pdca-header-row"><div class="pdca-col-label">ID</div><div class="pdca-col-label">Subação</div><div class="pdca-col-label">Responsável</div><div class="pdca-col-label">Prazo</div><div class="pdca-col-label">Evidência</div><div class="pdca-col-label">Status</div></div>
+    <div class="pdca-rows">
+      <div class="pdca-row"><div class="pdca-id">06.01</div><div class="pdca-subacao">Monitorar indicadores mensais</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Mensal</div><div class="pdca-evidencia">Dashboard</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">06.02</div><div class="pdca-subacao">Registrar NC e oportunidades</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Mensal</div><div class="pdca-evidencia">RNC</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">06.03</div><div class="pdca-subacao">Elaborar relatório parcial</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Agosto</div><div class="pdca-evidencia">Relatório</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">06.04</div><div class="pdca-subacao">Apresentar na análise crítica</div><div class="pdca-resp">Diretoria</div><div class="pdca-prazo">Setembro</div><div class="pdca-evidencia">Ata</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">06.05</div><div class="pdca-subacao">Avaliar efetividade geral</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Setembro</div><div class="pdca-evidencia">Indicador</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+      <div class="pdca-row"><div class="pdca-id">06.06</div><div class="pdca-subacao">Definir próximo ciclo · PDCA 02</div><div class="pdca-resp">SGQ</div><div class="pdca-prazo">Setembro</div><div class="pdca-evidencia">Documento</div><div><span class="badge badge-pending">PENDENTE</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Placeholder pages -->
+<div class="page" id="page-intelligence"><div class="page-header"><div class="page-badge">Análise Integrada</div><div class="page-title-h1">People Intelligence</div><div class="page-desc">Análise cruzada de todos os módulos — continuidade, conhecimento e sucessão.</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:13px;background:rgba(255,255,255,0.02);border-radius:14px;border:1px dashed rgba(255,255,255,0.08)">Conectar módulo no React App</div></div>
+<div class="page" id="page-import"><div class="page-header"><div class="page-badge">Importação de Dados</div><div class="page-title-h1">Import Center</div><div class="page-desc">Importe colaboradores, funções, competências e evidências via planilha Excel.</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:13px;background:rgba(255,255,255,0.02);border-radius:14px;border:1px dashed rgba(255,255,255,0.08)">Disponível no React App</div></div>
+<div class="page" id="page-workforce"><div class="page-header"><div class="page-badge">PDCA Ação 01 · ISO 6.1</div><div class="page-title-h1">Workforce Map</div><div class="page-desc">Estrutura completa da força de trabalho — setores, funções e alocações.</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:13px;background:rgba(255,255,255,0.02);border-radius:14px;border:1px dashed rgba(255,255,255,0.08)">Disponível no React App (npm run dev)</div></div>
+<div class="page" id="page-training"><div class="page-header"><div class="page-badge">PDCA Ação 05 · ISO 7.2 · 7.3</div><div class="page-title-h1">Treinamento & OJT</div><div class="page-desc">Controle de treinamentos teóricos, OJT prático e registro de multiplicação de conhecimento.</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:13px;background:rgba(255,255,255,0.02);border-radius:14px;border:1px dashed rgba(255,255,255,0.08)">Disponível no React App (npm run dev)</div></div>
+<div class="page" id="page-knowledge"><div class="page-header"><div class="page-badge">PDCA Ação 01 · 04 · ISO 7.1.6</div><div class="page-title-h1">Base de Conhecimento</div><div class="page-desc">Formalização e controle de Instruções de Trabalho e conhecimento técnico crítico auditável.</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:13px;background:rgba(255,255,255,0.02);border-radius:14px;border:1px dashed rgba(255,255,255,0.08)">Disponível no React App (npm run dev)</div></div>
+<div class="page" id="page-evidence"><div class="page-header"><div class="page-badge">PDCA · ISO 9.1 · Rastreabilidade</div><div class="page-title-h1">Central de Evidências</div><div class="page-desc">Registro rastreável de evidências por subação PDCA. Sem evidência = subação não concluída.</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:13px;background:rgba(255,255,255,0.02);border-radius:14px;border:1px dashed rgba(255,255,255,0.08)">Disponível no React App (npm run dev)</div></div>
+<div class="page" id="page-vuln"><div class="page-header"><div class="page-badge">PDCA Ação 06 · ISO 9.1 · 9.3</div><div class="page-title-h1">Análise de Vulnerabilidade</div><div class="page-desc">Índice de vulnerabilidade operacional, ranking de risco e análise crítica pela direção.</div></div><div style="height:300px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:13px;background:rgba(255,255,255,0.02);border-radius:14px;border:1px dashed rgba(255,255,255,0.08)">Disponível no React App (npm run dev)</div></div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+const PAGE_META = {
+  dashboard:    ["Dashboard Executivo",       "PDCA Brain · ISO 9001:2015 · Visão Geral"],
+  intelligence: ["People Intelligence",       "Análise Integrada"],
+  import:       ["Import Center",             "Importação de Dados"],
+  workforce:    ["Workforce Map",             "PDCA Ação 01 · ISO 6.1"],
+  critical:     ["Funções Críticas",          "PDCA Ação 02 · ISO 6.1 · 7.2"],
+  polyvalence:  ["Matriz de Polivalência",    "PDCA Ação 03 · ISO 7.2"],
+  backup:       ["Backup Operacional",        "PDCA Ação 05 · ISO 7.2 · 7.3"],
+  training:     ["Treinamento & OJT",         "PDCA Ação 05 · ISO 7.2 · 7.3"],
+  knowledge:    ["Base de Conhecimento",      "PDCA Ação 01 · 04 · ISO 7.1.6"],
+  evidence:     ["Central de Evidências",     "PDCA · ISO 9.1 · Rastreabilidade"],
+  vuln:         ["Análise de Vulnerabilidade","PDCA Ação 06 · ISO 9.1 · 9.3"],
+  plans:        ["Planos de Ação",            "PDCA Ação 06 · ISO 9.3 · Ciclo PDCA"],
+};
+
+function show(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    n.querySelector('.nav-dot')?.remove();
+  });
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (!btn.querySelector('.nav-dot')) {
+    const dot = document.createElement('span');
+    dot.className = 'nav-dot';
+    btn.appendChild(dot);
+  }
+  const meta = PAGE_META[id] || [id, ''];
+  document.getElementById('topbar-title').textContent = meta[0];
+  document.getElementById('topbar-iso').textContent = meta[1];
+}
+
+function togglePdca(header) {
+  const rows = header.nextElementSibling?.nextElementSibling;
+  const headerRow = header.nextElementSibling;
+  if (!rows) return;
+  const hidden = rows.style.display === 'none';
+  rows.style.display = hidden ? '' : 'none';
+  if (headerRow) headerRow.style.display = hidden ? '' : 'none';
+}
+</script>
+</body>
+</html>

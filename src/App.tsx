@@ -15,24 +15,82 @@ import {
   INITIAL_EVIDENCES,
   calculateGUT,
   calculateVulnerability,
-  getFinalClassification
+  getFinalClassification,
+  Collaborator,
+  Skill,
+  CompetencyAssessment
 } from "./types";
 import { UBG_FUNCTIONS } from "./data/ubgFunctions";
+import { UBG_COLLABORATORS, UBG_SKILLS, UBG_FUNCTION_SKILLS_MAP } from "./data/ubgCompetencyData";
 
 export default function App() {
-  // Navigation states - Default inWorkspace to true
+  // Navigation states
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // State entities loaded with fallback seed data
+  // New competency and polivalency state tables
+  const [collaborators, setCollaborators] = useState<Collaborator[]>(() => {
+    const saved = localStorage.getItem("ubg_collaborators");
+    return saved ? JSON.parse(saved) : UBG_COLLABORATORS;
+  });
+
+  const [skills, setSkills] = useState<Skill[]>(() => {
+    const saved = localStorage.getItem("ubg_skills");
+    return saved ? JSON.parse(saved) : UBG_SKILLS;
+  });
+
+  const [assessments, setAssessments] = useState<CompetencyAssessment[]>(() => {
+    const saved = localStorage.getItem("ubg_assessments");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // State entities loaded with fallback seed data and dynamic matrix hydration
   const [funcoes, setFuncoes] = useState<FuncaoCritica[]>(() => {
     const saved = localStorage.getItem("ubg_funcoes_criticas");
+    let baseFuncs = UBG_FUNCTIONS;
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed.length === 18 && parsed.some((p: any) => p.idFuncao.startsWith("UBG-"))) {
-        return parsed;
+        baseFuncs = parsed;
       }
     }
-    return UBG_FUNCTIONS;
+    
+    // Hydrate relations
+    return baseFuncs.map(f => {
+      // Find main operators by name match or primaryFunctionId match
+      const mainOps = UBG_COLLABORATORS
+        .filter(c => c.primaryFunctionId === f.idFuncao || f.colaboradorPrincipal.toLowerCase().includes(c.name.toLowerCase()))
+        .map(c => c.id);
+      
+      // Find backup operators based on simple matching or existing mappings
+      const backupOps: string[] = [];
+      if (f.backup1 && f.backup1 !== "Sem Backup Cadastrado" && !f.backup1.toLowerCase().includes("nenhum")) {
+        const match = UBG_COLLABORATORS.find(c => f.backup1.toLowerCase().includes(c.name.toLowerCase()));
+        if (match) backupOps.push(match.id);
+        else {
+          const placeholder = UBG_COLLABORATORS.find(c => c.primaryFunctionId === "UBG-006" || c.name.toLowerCase().includes("silva"));
+          if (placeholder && !mainOps.includes(placeholder.id)) backupOps.push(placeholder.id);
+        }
+      }
+      if (f.backup2 && f.backup2 !== "Sem Backup Cadastrado" && !f.backup2.toLowerCase().includes("nenhum") && !f.backup2.toLowerCase().includes("sem backup")) {
+        const match = UBG_COLLABORATORS.find(c => f.backup2.toLowerCase().includes(c.name.toLowerCase()));
+        if (match) backupOps.push(match.id);
+      }
+
+      if (f.existeBackup === "SIM" && backupOps.length === 0) {
+        const fallback = UBG_COLLABORATORS.find(c => !mainOps.includes(c.id));
+        if (fallback) backupOps.push(fallback.id);
+      }
+
+      const reqSkills = UBG_FUNCTION_SKILLS_MAP[f.idFuncao] || [];
+
+      return {
+        ...f,
+        mainOperatorIds: f.mainOperatorIds || mainOps,
+        backupOperatorIds: f.backupOperatorIds || backupOps,
+        requiredSkills: f.requiredSkills || reqSkills,
+        requiredBackupQuantity: f.requiredBackupQuantity || (f.existeBackup === "SIM" ? 2 : 0)
+      };
+    });
   });
 
   const [acoes, setAcoes] = useState<ActionPlan[]>(() => {
@@ -78,9 +136,20 @@ export default function App() {
     localStorage.setItem("ubg_iso_evidences", JSON.stringify(evidencias));
   }, [evidencias]);
 
+  useEffect(() => {
+    localStorage.setItem("ubg_collaborators", JSON.stringify(collaborators));
+  }, [collaborators]);
+
+  useEffect(() => {
+    localStorage.setItem("ubg_skills", JSON.stringify(skills));
+  }, [skills]);
+
+  useEffect(() => {
+    localStorage.setItem("ubg_assessments", JSON.stringify(assessments));
+  }, [assessments]);
+
   // CRITICAL FUNCTIONS CALLBACKS
   const handleAddFuncao = (funcao: FuncaoCritica) => {
-    // Check if ID already exists
     const duplicate = funcoes.some(f => f.idFuncao === funcao.idFuncao);
     if (duplicate) {
       triggerToast(`O ID Função "${funcao.idFuncao}" já existe. Geramos um ID alternativo automaticamente.`, "info");
@@ -95,7 +164,6 @@ export default function App() {
     setFuncoes(prev => prev.map(f => f.id === updated.id ? updated : f));
     triggerToast(`Ficha da função [${updated.idFuncao}] foi atualizada com sucesso!`, "info");
     
-    // Auto sync code/name inside PDCA actions that refer to this function
     setAcoes(prev => prev.map(ac => {
       if (ac.funcaoCriticaId === updated.id) {
         return {
@@ -113,7 +181,6 @@ export default function App() {
     setFuncoes(prev => prev.filter(f => f.id !== id));
     triggerToast(`Função [${target?.idFuncao || ""}] removida dos registros.`, "danger");
 
-    // Clear editing node if it was deleted
     if (editFuncNode?.id === id) {
       setEditFuncNode(null);
     }
@@ -134,7 +201,6 @@ export default function App() {
   const handleUpdateAcaoStatus = (id: number, newStatus: "Planejado" | "Em Execução" | "Concluido" | "Cancelado") => {
     setAcoes(prev => prev.map(ac => ac.id === id ? { ...ac, status: newStatus } : ac));
     
-    // If action is concluded, trigger message
     if (newStatus === "Concluido") {
       triggerToast("Ação PDCA concluída com sucesso! Parabéns!");
     } else {
@@ -157,9 +223,8 @@ export default function App() {
     }
   };
 
-  // Navigation and stats definitions
   const totalFuncoesCount = funcoes.length;
-  const criticalCount = funcoes.filter(f => f.classificacaoFinal === "Crítico").length;
+  const criticalCount = funcoes.filter(f => f.classificacaoFinal === "Crítico" || f.classificacaoFinal === "Alto").length;
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen font-sans antialiased text-[#04044A]">
@@ -167,7 +232,6 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={(tab) => {
           setActiveTab(tab);
-          // Cancel editing mode when leaving cadastro tab
           if (tab !== "cadastro") {
             setEditFuncNode(null);
           }
@@ -177,11 +241,12 @@ export default function App() {
         criticalCount={criticalCount}
       >
         
-        {/* Active view component projection */}
         {activeTab === "dashboard" && (
           <Dashboard 
             funcoes={funcoes} 
             acoes={acoes} 
+            collaborators={collaborators}
+            evidencias={evidencias}
             onNavigateTab={(tab) => {
               setActiveTab(tab);
               if (tab !== "cadastro") setEditFuncNode(null);
@@ -196,6 +261,8 @@ export default function App() {
             onUpdateFuncao={handleUpdateFuncao}
             editFuncNode={editFuncNode}
             clearEditNode={() => setEditFuncNode(null)}
+            collaborators={collaborators}
+            skills={skills}
           />
         )}
 
@@ -211,6 +278,18 @@ export default function App() {
             onNavigateTab={(tab) => {
               setActiveTab(tab);
               if (tab !== "cadastro") setEditFuncNode(null);
+            }}
+            collaborators={collaborators}
+            skills={skills}
+            assessments={assessments}
+            onUpdateCollaboratorSkills={(colabId, updatedSkills) => {
+              const updated = collaborators.map(c => c.id === colabId ? { ...c, skills: updatedSkills } : c);
+              setCollaborators(updated);
+              triggerToast("Proficiência atualizada no prontuário do colaborador!", "success");
+            }}
+            onAddAssessment={(newAs) => {
+              setAssessments(prev => [newAs, ...prev]);
+              triggerToast(`Avaliação de competência registrada!`, "success");
             }}
           />
         )}
@@ -247,7 +326,7 @@ export default function App() {
             }`}></span>
             <div>
               <p className="font-mono text-[9px] text-[#00E7F8] uppercase tracking-wider leading-none">RJT NEXUS Intelligence</p>
-              <p className="text-slate-350 mt-1 leading-snug">{toast.message}</p>
+              <p className="text-slate-300 mt-1 leading-snug">{toast.message}</p>
             </div>
           </div>
         </div>

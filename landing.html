@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RJT Nexus People — Gestão Estratégica ISO 9001:2015</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:    #05050A;
+      --dark:     #0D0D14;
+      --surface:  #12121C;
+      --surface2: #1A1A28;
+      --border:   rgba(255,255,255,0.07);
+      --blue:     #0066FF;
+      --blue-light:#3385FF;
+      --cyan:     #00E7F8;
+      --green:    #00D48A;
+      --amber:    #F59E0B;
+      --red:      #FF4757;
+      --white:    #FFFFFF;
+      --gray:     #8B8FA8;
+      --gray-light:#C4C7D6;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── NAVBAR ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5%; height: 68px;
+      background: rgba(5,5,10,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: linear-gradient(135deg, #0066FF, #00E7F8);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 900; color: #fff; letter-spacing: -1px;
+    }
+    .nav-logo-text { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .nav-logo-text span { color: var(--cyan); }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a { font-size: 13px; font-weight: 500; color: var(--gray); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .btn-ghost {
+      padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      background: transparent; border: 1px solid var(--border); color: var(--gray-light);
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-ghost:hover { border-color: rgba(0,102,255,0.5); color: var(--white); }
+    .btn-primary {
+      padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 700;
+      background: var(--blue); border: none; color: var(--white);
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      box-shadow: 0 0 20px rgba(0,102,255,0.35);
+    }
+    .btn-primary:hover { background: var(--blue-light); box-shadow: 0 0 30px rgba(0,102,255,0.5); }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 140px 5% 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,102,255,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 90% 60%, rgba(0,231,248,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 10% 80%, rgba(0,102,255,0.06) 0%, transparent 60%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 0%, black 0%, transparent 80%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 760px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 14px 5px 8px; border-radius: 100px;
+      background: rgba(0,102,255,0.12); border: 1px solid rgba(0,102,255,0.3);
+      font-size: 11.5px; font-weight: 600; color: #5B9BFF;
+      margin-bottom: 28px; letter-spacing: 0.3px;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.85)} }
+
+    .hero h1 {
+      font-size: clamp(38px, 5.5vw, 64px);
+      font-weight: 900; line-height: 1.08;
+      letter-spacing: -2.5px; margin-bottom: 24px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(135deg, #3385FF 0%, #00E7F8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      font-size: 17px; color: var(--gray-light); max-width: 560px;
+      line-height: 1.75; margin-bottom: 36px; font-weight: 400;
+    }
+    .hero-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .btn-hero {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 10px; font-size: 15px; font-weight: 700;
+      background: var(--blue); border: none; color: var(--white);
+      cursor: pointer; transition: all 0.25s; text-decoration: none;
+      box-shadow: 0 0 30px rgba(0,102,255,0.4), 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .btn-hero:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(0,102,255,0.55), 0 8px 30px rgba(0,0,0,0.4); }
+    .btn-hero-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 10px; font-size: 15px; font-weight: 600;
+      background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--gray-light);
+      cursor: pointer; transition: all 0.25s; text-decoration: none;
+    }
+    .btn-hero-ghost:hover { border-color: rgba(0,231,248,0.4); color: var(--white); }
+
+    .hero-stats {
+      display: flex; gap: 40px; margin-top: 56px; padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+    .hero-stat-num {
+      font-size: 30px; font-weight: 900; letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 0%, #8B8FA8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-stat-label { font-size: 12px; color: var(--gray); margin-top: 2px; font-weight: 500; }
+
+    /* ─── HERO DASHBOARD MOCKUP ─── */
+    .hero-visual {
+      position: absolute; right: -2%; top: 50%;
+      transform: translateY(-50%);
+      width: 52%; max-width: 780px;
+      z-index: 1;
+    }
+    .dashboard-mockup {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04),
+        0 40px 100px rgba(0,0,0,0.7),
+        0 0 80px rgba(0,102,255,0.12);
+      transform: perspective(1200px) rotateY(-8deg) rotateX(3deg);
+    }
+    .mockup-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-dot:nth-child(1) { background: #FF5F57; }
+    .mockup-dot:nth-child(2) { background: #FFBD2E; }
+    .mockup-dot:nth-child(3) { background: #28C940; }
+    .mockup-url {
+      flex: 1; margin: 0 16px; padding: 5px 12px;
+      background: rgba(255,255,255,0.05); border-radius: 6px;
+      font-size: 11px; font-family: 'JetBrains Mono', monospace;
+      color: var(--gray); text-align: center;
+    }
+    .mockup-body { display: flex; }
+    .mockup-sidebar {
+      width: 56px; background: rgba(0,0,0,0.3);
+      border-right: 1px solid var(--border);
+      padding: 12px 8px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .mockup-nav-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer;
+    }
+    .mockup-nav-icon.active { background: rgba(0,102,255,0.25); }
+    .mockup-main { flex: 1; padding: 16px; }
+    .mockup-header { font-size: 11px; font-weight: 700; color: var(--gray); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    .mockup-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+    .mockup-kpi {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 10px;
+    }
+    .mockup-kpi-val { font-size: 20px; font-weight: 900; letter-spacing: -1px; }
+    .mockup-kpi-val.blue { color: var(--blue-light); }
+    .mockup-kpi-val.cyan { color: var(--cyan); }
+    .mockup-kpi-val.green { color: var(--green); }
+    .mockup-kpi-val.amber { color: var(--amber); }
+    .mockup-kpi-label { font-size: 9px; color: var(--gray); margin-top: 2px; font-weight: 500; }
+    .mockup-table-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 8px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+    .mockup-badge {
+      padding: 2px 8px; border-radius: 4px; font-size: 8.5px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+    }
+    .mockup-badge.pending { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .mockup-badge.progress { background: rgba(0,102,255,0.15); color: #5B9BFF; }
+    .mockup-badge.done { background: rgba(0,212,138,0.15); color: var(--green); }
+    .mockup-badge.risk { background: rgba(255,71,87,0.15); color: var(--red); }
+    .mockup-row-text { font-size: 9.5px; color: var(--gray-light); flex: 1; }
+    .mockup-progress-bar { width: 60px; height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+    .mockup-progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+
+    /* ─── LOGOS / SOCIAL PROOF ─── */
+    .logos-section {
+      padding: 40px 5%;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .logos-label { text-align: center; font-size: 11px; font-weight: 600; color: var(--gray); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px; }
+    .logos-row { display: flex; align-items: center; justify-content: center; gap: 48px; flex-wrap: wrap; }
+    .logo-item { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.2); letter-spacing: -0.5px; }
+
+    /* ─── PROBLEM SECTION ─── */
+    .section { padding: 100px 5%; }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: 2.5px;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(28px, 3.5vw, 44px); font-weight: 900;
+      letter-spacing: -1.5px; line-height: 1.12; margin-bottom: 20px;
+    }
+    .section-desc { font-size: 16px; color: var(--gray-light); max-width: 560px; line-height: 1.75; }
+
+    .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 56px; }
+    .pain-card {
+      padding: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .pain-card:hover { border-color: rgba(255,71,87,0.3); transform: translateY(-2px); }
+    .pain-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--red), rgba(255,71,87,0));
+    }
+    .pain-icon { font-size: 24px; margin-bottom: 14px; }
+    .pain-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+    .pain-desc { font-size: 13px; color: var(--gray); line-height: 1.7; }
+
+    /* ─── SOLUTION SECTION ─── */
+    .solution-section {
+      padding: 100px 5%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .solution-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .solution-modules {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .module-card {
+      padding: 18px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .module-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(0,102,255,0.06), transparent);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .module-card:hover { border-color: rgba(0,102,255,0.4); transform: translateY(-2px); }
+    .module-card:hover::after { opacity: 1; }
+    .module-icon { font-size: 20px; margin-bottom: 10px; }
+    .module-name { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .module-iso {
+      font-size: 9.5px; font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan); font-weight: 500;
+    }
+
+    /* ─── FEATURES ─── */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 64px; }
+    .feature-card {
+      padding: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      transition: all 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .feature-card:hover { border-color: rgba(0,102,255,0.3); transform: translateY(-3px); }
+    .feature-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon-wrap {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: rgba(0,102,255,0.12); border: 1px solid rgba(0,102,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 20px;
+    }
+    .feature-title { font-size: 17px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.3px; }
+    .feature-desc { font-size: 13.5px; color: var(--gray); line-height: 1.75; }
+    .feature-tag {
+      display: inline-flex; margin-top: 16px;
+      padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0,231,248,0.1); color: var(--cyan); border: 1px solid rgba(0,231,248,0.2);
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    .howit-section { padding: 100px 5%; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; margin-top: 64px; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; top: 30px; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), transparent);
+    }
+    .step { padding: 0 16px; text-align: center; position: relative; }
+    .step-num {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--surface); border: 2px solid rgba(0,102,255,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 900; color: var(--blue-light);
+      margin: 0 auto 20px; position: relative; z-index: 1;
+      box-shadow: 0 0 20px rgba(0,102,255,0.2);
+    }
+    .step-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 12.5px; color: var(--gray); line-height: 1.65; }
+
+    /* ─── COMPLIANCE BLOCK ─── */
+    .compliance-section {
+      margin: 0 5% 80px;
+      padding: 56px;
+      background: linear-gradient(135deg, rgba(0,102,255,0.1) 0%, rgba(0,231,248,0.05) 100%);
+      border: 1px solid rgba(0,102,255,0.2);
+      border-radius: 20px;
+      display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: center;
+    }
+    .compliance-clauses { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .clause-tag {
+      padding: 5px 12px; border-radius: 6px;
+      background: rgba(0,102,255,0.15); border: 1px solid rgba(0,102,255,0.25);
+      font-size: 11px; font-weight: 700; color: #5B9BFF;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .compliance-shield {
+      font-size: 80px; opacity: 0.7;
+      filter: drop-shadow(0 0 20px rgba(0,102,255,0.4));
+    }
+
+    /* ─── PRICING ─── */
+    .pricing-section { padding: 100px 5%; background: var(--surface); border-top: 1px solid var(--border); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 64px; max-width: 980px; margin-left: auto; margin-right: auto; }
+    .price-card {
+      padding: 36px 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      position: relative; transition: all 0.3s;
+    }
+    .price-card:hover { transform: translateY(-4px); }
+    .price-card.featured {
+      background: linear-gradient(135deg, rgba(0,102,255,0.15) 0%, rgba(0,231,248,0.05) 100%);
+      border-color: rgba(0,102,255,0.4);
+      box-shadow: 0 0 50px rgba(0,102,255,0.15);
+    }
+    .price-featured-tag {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      padding: 4px 16px; border-radius: 100px;
+      background: var(--blue); font-size: 11px; font-weight: 700; white-space: nowrap;
+    }
+    .price-plan { font-size: 12px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+    .price-amount { font-size: 42px; font-weight: 900; letter-spacing: -2px; }
+    .price-amount span { font-size: 18px; font-weight: 500; color: var(--gray); vertical-align: super; }
+    .price-amount small { font-size: 14px; font-weight: 500; color: var(--gray); }
+    .price-desc { font-size: 13px; color: var(--gray); margin: 12px 0 24px; line-height: 1.6; }
+    .price-divider { height: 1px; background: var(--border); margin-bottom: 24px; }
+    .price-feature {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px; color: var(--gray-light); margin-bottom: 12px;
+    }
+    .price-feature-check { color: var(--green); flex-shrink: 0; }
+    .price-btn {
+      display: block; width: 100%; padding: 13px; border-radius: 10px;
+      text-align: center; font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all 0.25s; text-decoration: none; margin-top: 28px;
+    }
+    .price-btn.outline { background: transparent; border: 1px solid var(--border); color: var(--gray-light); }
+    .price-btn.outline:hover { border-color: rgba(0,102,255,0.4); color: var(--white); }
+    .price-btn.solid { background: var(--blue); border: none; color: var(--white); box-shadow: 0 0 20px rgba(0,102,255,0.3); }
+    .price-btn.solid:hover { background: var(--blue-light); box-shadow: 0 0 35px rgba(0,102,255,0.5); }
+
+    /* ─── CTA FINAL ─── */
+    .cta-section {
+      padding: 120px 5%;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 50% 0%, rgba(0,102,255,0.15) 0%, transparent 70%);
+    }
+    .cta-section > * { position: relative; z-index: 1; }
+    .cta-section h2 { font-size: clamp(30px, 4vw, 52px); font-weight: 900; letter-spacing: -2px; margin-bottom: 20px; }
+    .cta-section p { font-size: 16px; color: var(--gray-light); margin-bottom: 40px; }
+    .cta-actions { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      padding: 48px 5% 32px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .footer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 48px; margin-bottom: 40px; }
+    .footer-brand p { font-size: 12.5px; color: var(--gray); margin-top: 10px; max-width: 260px; line-height: 1.65; }
+    .footer-col h4 { font-size: 11px; font-weight: 700; color: var(--gray); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
+    .footer-col a { display: block; font-size: 13px; color: var(--gray); text-decoration: none; margin-bottom: 9px; transition: color 0.2s; }
+    .footer-col a:hover { color: var(--white); }
+    .footer-bottom {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 24px; border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--gray);
+    }
+    .iso-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 6px;
+      background: rgba(0,212,138,0.1); border: 1px solid rgba(0,212,138,0.2);
+      font-size: 11px; font-weight: 700; color: var(--green);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .iso-badge::before { content: '✓'; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1024px) {
+      .hero-visual { display: none; }
+      .solution-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 420px; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 0 4%; }
+      .nav-links { display: none; }
+      .hero { padding-top: 100px; }
+      .hero-stats { gap: 24px; }
+      .compliance-section { grid-template-columns: 1fr; padding: 36px 28px; }
+      .compliance-shield { display: none; }
+      .footer-top { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">RJT</div>
+    <div class="nav-logo-text">Nexus <span>People</span></div>
+  </div>
+  <div class="nav-links">
+    <a href="#solucao">Solução</a>
+    <a href="#modulos">Módulos</a>
+    <a href="#conformidade">ISO 9001</a>
+    <a href="#precos">Preços</a>
+  </div>
+  <div class="nav-cta">
+    <a href="#precos" class="btn-ghost">Ver planos</a>
+    <a href="#cta" class="btn-primary">Agendar demo</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      Sistema certificado ISO 9001:2015 · PDCA Brain
+    </div>
+    <h1>
+      Gestão Estratégica de<br/>
+      <span class="grad">Pessoas e Conformidade</span><br/>
+      em tempo real.
+    </h1>
+    <p class="hero-desc">
+      Elimine a dependência de colaboradores-chave, controle competências críticas e gere evidências auditáveis automaticamente. Tudo em conformidade com a ISO 9001:2015.
+    </p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn-hero">
+        ▶ Ver demonstração
+      </a>
+      <a href="#modulos" class="btn-hero-ghost">
+        Explorar módulos →
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">36</div>
+        <div class="hero-stat-label">Subações PDCA controladas</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">9</div>
+        <div class="hero-stat-label">Módulos integrados</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">100%</div>
+        <div class="hero-stat-label">Rastreabilidade ISO</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD MOCKUP -->
+  <div class="hero-visual">
+    <div class="dashboard-mockup">
+      <div class="mockup-bar">
+        <div class="mockup-dot"></div>
+        <div class="mockup-dot"></div>
+        <div class="mockup-dot"></div>
+        <div class="mockup-url">app.rjtnexuspeople.com.br</div>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-sidebar">
+          <div class="mockup-nav-icon active">⚡</div>
+          <div class="mockup-nav-icon">👥</div>
+          <div class="mockup-nav-icon">🎯</div>
+          <div class="mockup-nav-icon">📊</div>
+          <div class="mockup-nav-icon">🛡️</div>
+          <div class="mockup-nav-icon">📋</div>
+          <div class="mockup-nav-icon">🔬</div>
+        </div>
+        <div class="mockup-main">
+          <div class="mockup-header">Executive Dashboard · UNIÃO BAG</div>
+          <div class="mockup-kpis">
+            <div class="mockup-kpi">
+              <div class="mockup-kpi-val blue">92<span style="font-size:11px">%</span></div>
+              <div class="mockup-kpi-label">Continuidade</div>
+            </div>
+            <div class="mockup-kpi">
+              <div class="mockup-kpi-val cyan">18</div>
+              <div class="mockup-kpi-label">Funções críticas</div>
+            </div>
+            <div class="mockup-kpi">
+              <div class="mockup-kpi-val green">84<span style="font-size:11px">%</span></div>
+              <div class="mockup-kpi-label">Polivalência</div>
+            </div>
+            <div class="mockup-kpi">
+              <div class="mockup-kpi-val amber">3</div>
+              <div class="mockup-kpi-label">Em risco</div>
+            </div>
+          </div>
+          <div class="mockup-header">Plano de Ação — PDCA 01</div>
+          <div class="mockup-table-row">
+            <div class="mockup-badge pending">PENDENTE</div>
+            <div class="mockup-row-text">01.01 · Levantar riscos técnicos — SGQ / Abril</div>
+            <div class="mockup-progress-bar"><div class="mockup-progress-fill" style="width:0%"></div></div>
+          </div>
+          <div class="mockup-table-row">
+            <div class="mockup-badge progress">EM ANDAMENTO</div>
+            <div class="mockup-row-text">02.03 · Identificar colaboradores-chave — RH</div>
+            <div class="mockup-progress-bar"><div class="mockup-progress-fill" style="width:45%"></div></div>
+          </div>
+          <div class="mockup-table-row">
+            <div class="mockup-badge done">CONCLUÍDO</div>
+            <div class="mockup-row-text">03.01 · Definir critérios de avaliação — SGQ</div>
+            <div class="mockup-progress-bar"><div class="mockup-progress-fill" style="width:100%"></div></div>
+          </div>
+          <div class="mockup-table-row">
+            <div class="mockup-badge risk">EM RISCO</div>
+            <div class="mockup-row-text">05.02 · Elaborar plano de multiplicação — SGQ</div>
+            <div class="mockup-progress-bar"><div class="mockup-progress-fill" style="width:20%; background: linear-gradient(90deg, #FF4757, #FF8C00)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS -->
+<div class="logos-section">
+  <div class="logos-label">Empresas que confiam na metodologia RJT</div>
+  <div class="logos-row">
+    <span class="logo-item">UNIÃO BAG</span>
+    <span class="logo-item">QUALIPAPEL</span>
+    <span class="logo-item">INDÚSTRIAS SILVA</span>
+    <span class="logo-item">GRUPO MONTEIRO</span>
+    <span class="logo-item">EMBRASUL</span>
+  </div>
+</div>
+
+<!-- PROBLEMA -->
+<section class="section" id="solucao">
+  <div class="section-label">O Problema</div>
+  <div class="section-title">Seu conhecimento técnico<br/>está em risco agora.</div>
+  <p class="section-desc">Sem um sistema estruturado, o conhecimento crítico da operação existe apenas na cabeça de alguns colaboradores. Quando eles saem, você perde.</p>
+  <div class="pain-grid">
+    <div class="pain-card">
+      <div class="pain-icon">⚠️</div>
+      <div class="pain-title">Dependência técnica concentrada</div>
+      <div class="pain-desc">Conhecimento crítico em poucos colaboradores. Se um sai, a operação para. Risco classificado W9 na matriz GUT.</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">📂</div>
+      <div class="pain-title">Sem documentação rastreável</div>
+      <div class="pain-desc">Processos não documentados ou desatualizados. Auditoria ISO reprovada por falta de evidências objetivas e datadas.</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">🔄</div>
+      <div class="pain-title">Retrabalho e variabilidade</div>
+      <div class="pain-desc">Sem padronização, cada operador executa de forma diferente. O resultado é inconsistente e impossível de controlar.</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">📉</div>
+      <div class="pain-title">Conformidade ISO sem controle</div>
+      <div class="pain-desc">Cláusulas 7.1.6, 7.2 e 9.1 não atendidas. PDCA sem evidência = PDCA inexistente para o auditor externo.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUÇÃO -->
+<section class="solution-section" id="modulos">
+  <div style="max-width:1200px; margin:0 auto;">
+    <div class="solution-grid">
+      <div>
+        <div class="section-label">A Solução</div>
+        <div class="section-title">9 módulos integrados.<br/>Uma plataforma.</div>
+        <p class="section-desc" style="margin-bottom:36px">Cada módulo do RJT Nexus People atende diretamente uma cláusula ISO 9001:2015. Do mapeamento de riscos até o dashboard de efetividade, tudo rastreável e auditável.</p>
+        <a href="#cta" class="btn-hero" style="display:inline-flex">Solicitar demonstração →</a>
+      </div>
+      <div class="solution-modules">
+        <div class="module-card"><div class="module-icon">🗺️</div><div class="module-name">Workforce Map</div><div class="module-iso">ISO 6.1</div></div>
+        <div class="module-card"><div class="module-icon">⚡</div><div class="module-name">Critical Functions</div><div class="module-iso">ISO 6.1 · 7.2</div></div>
+        <div class="module-card"><div class="module-icon">🔲</div><div class="module-name">Polyvalence Matrix</div><div class="module-iso">ISO 7.2</div></div>
+        <div class="module-card"><div class="module-icon">🔄</div><div class="module-name">Backup & Succession</div><div class="module-iso">ISO 7.2 · 7.3</div></div>
+        <div class="module-card"><div class="module-icon">🎓</div><div class="module-name">Training & OJT</div><div class="module-iso">ISO 7.2 · 7.3</div></div>
+        <div class="module-card"><div class="module-icon">📚</div><div class="module-name">Knowledge Hub</div><div class="module-iso">ISO 7.1.6 · 8.5.1</div></div>
+        <div class="module-card"><div class="module-icon">📁</div><div class="module-name">Evidence Center</div><div class="module-iso">ISO 9.1</div></div>
+        <div class="module-card"><div class="module-icon">🔬</div><div class="module-name">Vulnerability Analytics</div><div class="module-iso">ISO 9.1 · 9.3</div></div>
+        <div class="module-card" style="grid-column:1/-1"><div class="module-icon">📋</div><div class="module-name">Action Plans · PDCA Brain</div><div class="module-iso">ISO 9.1 · 9.3 · Ciclo PDCA Completo</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="conformidade">
+  <div class="section-label">Diferenciais</div>
+  <div class="section-title">Construído para o auditor.<br/>Operado pelo gestor.</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon-wrap">🧠</div>
+      <div class="feature-title">PDCA Brain Integrado</div>
+      <div class="feature-desc">Pipeline completo: Ação Macro → Subações → Evidências → Dashboard de Efetividade. Progresso calculado automaticamente com base nas evidências validadas.</div>
+      <div class="feature-tag">REGRA: SEM EVIDÊNCIA = NÃO CONCLUÍDO</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">📊</div>
+      <div class="feature-title">Dashboard Executivo em Tempo Real</div>
+      <div class="feature-desc">Score de continuidade operacional, mapa de risco, ranking de vulnerabilidades e índice de polivalência. Tudo calculado em tempo real com dados da sua operação.</div>
+      <div class="feature-tag">EXECUTIVE INTELLIGENCE</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">🛡️</div>
+      <div class="feature-title">Auditoria ISO sem surpresas</div>
+      <div class="feature-desc">Cada evidência é datada, rastreável e vinculada à cláusula ISO correspondente. Gere relatórios de conformidade em segundos para a análise crítica da diretoria.</div>
+      <div class="feature-tag">ISO 9001:2015 COMPLIANT</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">🔐</div>
+      <div class="feature-title">Multitenant com isolamento total</div>
+      <div class="feature-desc">Cada empresa tem seu ambiente isolado. Arquitetura edge com Turso + Cloudflare R2, garantindo performance global e segurança de dados de nível enterprise.</div>
+      <div class="feature-tag">ENTERPRISE-GRADE SECURITY</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">⚡</div>
+      <div class="feature-title">Import Center com validação</div>
+      <div class="feature-desc">Importe colaboradores, funções, competências e evidências via planilha Excel. Validação automática com relatório de erros e avisos antes de qualquer alteração.</div>
+      <div class="feature-tag">ZERO DOWNTIME MIGRATION</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">🎯</div>
+      <div class="feature-title">Matriz GUT automatizada</div>
+      <div class="feature-desc">Aplicação automática da matriz GUT para priorização de riscos. Classificação Pendente → Em Andamento → Em Risco → Concluído com evidência validada.</div>
+      <div class="feature-tag">GUT SCORE AUTOMÁTICO</div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="howit-section" style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div style="text-align:center; margin-bottom:0">
+    <div class="section-label" style="text-align:center">Como funciona</div>
+    <div class="section-title" style="text-align:center; margin-bottom:0">Da implantação à auditoria<br/>em 4 etapas.</div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-title">Importe seus dados</div>
+      <div class="step-desc">Colaboradores, funções críticas e competências atuais via planilha. Validação automática antes de qualquer alteração.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">Mapeie vulnerabilidades</div>
+      <div class="step-desc">O sistema identifica pontos únicos de falha, lacunas de competência e funções sem backup operacional.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-title">Execute o PDCA</div>
+      <div class="step-desc">Subações rastreadas com evidências. Progresso automático. Notificação de prazos e riscos em tempo real.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-title">Prove na auditoria</div>
+      <div class="step-desc">Relatórios ISO prontos, evidências datadas, dashboard de efetividade para análise crítica da diretoria.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONFORMIDADE ISO -->
+<div class="compliance-section">
+  <div>
+    <div class="section-label">Conformidade Total</div>
+    <div class="section-title" style="font-size:clamp(22px,2.5vw,34px)">Cada módulo mapeado<br/>para uma cláusula ISO 9001:2015</div>
+    <div class="compliance-clauses">
+      <span class="clause-tag">6.1 Riscos</span>
+      <span class="clause-tag">7.1.6 Conhecimento Org.</span>
+      <span class="clause-tag">7.2 Competência</span>
+      <span class="clause-tag">7.3 Conscientização</span>
+      <span class="clause-tag">8.5.1 Controle Produção</span>
+      <span class="clause-tag">9.1 Monitoramento</span>
+      <span class="clause-tag">9.3 Análise Crítica</span>
+    </div>
+  </div>
+  <div class="compliance-shield">🛡️</div>
+</div>
+
+<!-- PREÇOS -->
+<section class="pricing-section" id="precos">
+  <div style="text-align:center">
+    <div class="section-label" style="text-align:center">Investimento</div>
+    <div class="section-title" style="text-align:center">Planos para cada<br/>estágio da jornada ISO.</div>
+  </div>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-plan">Starter</div>
+      <div class="price-amount"><span>R$</span> 497<small>/mês</small></div>
+      <div class="price-desc">Para empresas iniciando a jornada ISO 9001:2015.</div>
+      <div class="price-divider"></div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Até 50 colaboradores</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Dashboard executivo</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Funções críticas + Backup</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> 1 PDCA ativo</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Evidence Center básico</div>
+      <a href="#cta" class="price-btn outline">Começar agora</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-featured-tag">✦ Mais escolhido</div>
+      <div class="price-plan">Professional</div>
+      <div class="price-amount"><span>R$</span> 1.297<small>/mês</small></div>
+      <div class="price-desc">Para empresas em certificação ou manutenção da ISO 9001.</div>
+      <div class="price-divider"></div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Colaboradores ilimitados</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Todos os 9 módulos ativos</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> PDCA Brain completo</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Import Center avançado</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Vulnerability Analytics</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Suporte prioritário RJT</div>
+      <a href="#cta" class="price-btn solid">Agendar demonstração</a>
+    </div>
+    <div class="price-card">
+      <div class="price-plan">Enterprise</div>
+      <div class="price-amount" style="font-size:28px; letter-spacing:-1px">Sob consulta</div>
+      <div class="price-desc">Para grupos industriais com múltiplas unidades e auditoria integrada.</div>
+      <div class="price-divider"></div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Multiempresa (multitenant)</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Integração ERP / sistemas legados</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Consultoria RJT dedicada</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> SLA garantido 99.9%</div>
+      <div class="price-feature"><span class="price-feature-check">✓</span> Treinamento da equipe in-loco</div>
+      <a href="#cta" class="price-btn outline">Falar com especialista</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section" id="cta">
+  <h2>Pronto para eliminar o risco<br/>de perda de conhecimento?</h2>
+  <p>Agende uma demonstração com um especialista RJT e veja o sistema funcionando com os dados da sua empresa.</p>
+  <div class="cta-actions">
+    <a href="mailto:contato@rjtconsultoria.com.br" class="btn-hero">Agendar demonstração gratuita</a>
+    <a href="#modulos" class="btn-hero-ghost">Ver todos os módulos →</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="nav-logo">
+        <div class="nav-logo-icon">RJT</div>
+        <div class="nav-logo-text">Nexus <span>People</span></div>
+      </div>
+      <p>Sistema de Gestão Estratégica SGQ certificado ISO 9001:2015. Desenvolvido pela RJT Consultoria.</p>
+      <div style="margin-top:14px">
+        <span class="iso-badge"> ISO 9001:2015</span>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Produto</h4>
+      <a href="#modulos">Módulos</a>
+      <a href="#conformidade">Conformidade ISO</a>
+      <a href="#precos">Preços</a>
+      <a href="#cta">Demonstração</a>
+    </div>
+    <div class="footer-col">
+      <h4>Empresa</h4>
+      <a href="#">Sobre a RJT</a>
+      <a href="#">Metodologia PDCA</a>
+      <a href="#">Cases de sucesso</a>
+      <a href="#">Blog</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contato</h4>
+      <a href="mailto:contato@rjtconsultoria.com.br">contato@rjtconsultoria.com.br</a>
+      <a href="#">WhatsApp</a>
+      <a href="#">LinkedIn</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 RJT Consultoria. Todos os direitos reservados.</span>
+    <span>Sistema PDCA Brain · ISO 9001:2015 · v2.0</span>
+  </div>
+</footer>
+
+</body>
+</html>
