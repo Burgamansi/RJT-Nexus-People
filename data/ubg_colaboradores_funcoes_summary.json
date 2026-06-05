@@ -1,0 +1,21 @@
+{
+  "total_collaborators": 55,
+  "total_unique_functions": 21,
+  "total_sectors": 13,
+  "records_requiring_validation": 0,
+  "unique_sectors": [
+    "Compras / Suprimentos",
+    "Expedição",
+    "Financeiro",
+    "Gestão Administrativa",
+    "Logística / Transporte",
+    "Manutenção",
+    "Produção – Apoio",
+    "Produção – Corte",
+    "Produção – Costura",
+    "Produção – Processos",
+    "Recursos Humanos",
+    "Restaurante Industrial",
+    "Serviços Gerais"
+  ]
+}
