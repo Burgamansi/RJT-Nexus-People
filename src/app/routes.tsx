@@ -24,7 +24,7 @@ export const RouteRenderer: React.FC<RouteRendererProps> = ({
   onNavigate
 }) => {
   if (currentTab === "dashboard") {
-    return <ExecutiveDashboardPage />;
+    return <ExecutiveDashboardPage onNavigate={onNavigate} />;
   }
 
   if (currentTab === "intelligence") {
@@ -32,7 +32,7 @@ export const RouteRenderer: React.FC<RouteRendererProps> = ({
   }
 
   if (currentTab === "import-center") {
-    return <ImportCenterPage />;
+    return <ImportCenterPage onNavigate={onNavigate} />;
   }
 
   if (currentTab === "workforce-map") {
@@ -71,53 +71,25 @@ export const RouteRenderer: React.FC<RouteRendererProps> = ({
     return <ActionPlansPage />;
   }
 
-  // Handle module pages dynamically
   const feat = peopleFeatureRegistry.find(f => f.id === currentTab);
   if (feat) {
     return (
-      <div className="space-y-8">
-        <div className="space-y-2">
-          <span className="text-[9px] font-mono font-bold tracking-widest text-[#00E7F8] bg-[#00E7F8]/10 px-2.5 py-1 rounded-full uppercase border border-[#00E7F8]/20 select-none">
-            {feat.category}
-          </span>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight pt-2">
-            {feat.title}
-          </h1>
-          <p className="text-xs text-[#00E7F8] font-mono">
-            Status: {feat.status.toUpperCase()}
-          </p>
-        </div>
-
-        <div className="bg-[#04044A]/40 rounded-2xl border border-slate-800 p-6 space-y-4">
-          <h3 className="text-sm font-bold text-white uppercase font-mono">Overview</h3>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            {feat.description}
-          </p>
-          <div className="bg-slate-900/60 rounded-xl p-4 border border-slate-800/40">
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Business Purpose</p>
-            <p className="text-xs text-slate-200 mt-1 italic">
-              "{feat.businessPurpose}"
-            </p>
-          </div>
-        </div>
-
-        <div className="pt-6">
-          <EmptyState
-            title={`${feat.title} Dashboard Pending Integration`}
-            message={`The backend analytics for ${feat.title} have been fully modernized in selectors.ts. This UI placeholder will consume the validated multitenant calculations in the subsequent phase.`}
-            actionLabel="Return to People Intelligence Dashboard"
-            onAction={() => onNavigate("intelligence")}
-          />
-        </div>
+      <div className="space-y-6">
+        <EmptyState
+          title="Modulo indisponivel nesta rota"
+          message={`${feat.title} ja esta registrado na navegacao mestre. Volte para a central de modulos para abrir a experiencia operacional correspondente.`}
+          actionLabel="Voltar aos modulos"
+          onAction={() => onNavigate("intelligence")}
+        />
       </div>
     );
   }
 
   return (
     <EmptyState
-      title="404 Page Not Found"
-      message="The requested People Intelligence sub-tab does not exist."
-      actionLabel="Back to Dashboard"
+      title="Pagina nao encontrada"
+      message="A aba solicitada nao existe na plataforma RJT Nexus People."
+      actionLabel="Voltar ao dashboard"
       onAction={() => onNavigate("dashboard")}
     />
   );

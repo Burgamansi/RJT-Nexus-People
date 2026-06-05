@@ -3,91 +3,91 @@ export interface PeopleFeature {
   title: string;
   description: string;
   route: string;
-  status: "active" | "modernized" | "stable" | "beta";
-  category: "Workforce Structure" | "Competence & Coverage" | "Risk & Compliance";
+  status: "ativo" | "modernizado" | "estavel" | "piloto";
+  category: "Estrutura da Forca de Trabalho" | "Competencia e Cobertura" | "Risco e Conformidade";
   businessPurpose: string;
 }
 
 export const peopleFeatureRegistry: PeopleFeature[] = [
   {
     id: "workforce-map",
-    title: "Workforce Map",
-    description: "Manage workforce structure, organization units, positions, and employee assignments with tenant isolated models.",
+    title: "Mapa da Forca de Trabalho",
+    description: "Gerencie estrutura operacional, setores, funcoes e alocacoes de pessoas com isolamento por tenant.",
     route: "/workforce-map",
-    status: "modernized",
-    category: "Workforce Structure",
-    businessPurpose: "Establish an accurate, SaaS-ready workforce organization foundation."
+    status: "modernizado",
+    category: "Estrutura da Forca de Trabalho",
+    businessPurpose: "Manter uma base organizacional precisa para operacao SaaS multiempresa."
   },
   {
     id: "critical-functions",
-    title: "Critical Functions",
-    description: "Identify and assess operational critical functions using standard GUT criticality metrics.",
+    title: "Funcoes Criticas",
+    description: "Identifique e avalie funcoes criticas usando Score GxUxT, criticidade e exposicao operacional.",
     route: "/critical-functions",
-    status: "modernized",
-    category: "Workforce Structure",
-    businessPurpose: "Mitigate key operational continuity risks in the corporate hierarchy."
+    status: "modernizado",
+    category: "Estrutura da Forca de Trabalho",
+    businessPurpose: "Reduzir riscos de continuidade em pontos operacionais sensiveis."
   },
   {
     id: "polyvalence-matrix",
-    title: "Polyvalence Matrix",
-    description: "Map primary, backup, and training qualification levels per employee and function.",
+    title: "Matriz de Polivalencia",
+    description: "Mapeie titulares, backups e niveis de qualificacao por pessoa e funcao.",
     route: "/polyvalence-matrix",
-    status: "modernized",
-    category: "Competence & Coverage",
-    businessPurpose: "Track employee skills polyvalence and operational coverage rates."
+    status: "modernizado",
+    category: "Competencia e Cobertura",
+    businessPurpose: "Acompanhar cobertura operacional e polivalencia da equipe."
   },
   {
     id: "backup-succession",
-    title: "Backup & Succession",
-    description: "Analyze backup coverage gaps, succession readiness, and operational continuity risks.",
+    title: "Backup e Sucessao",
+    description: "Analise lacunas de backup, sucessores preparados e riscos de continuidade.",
     route: "/backup-succession",
-    status: "modernized",
-    category: "Competence & Coverage",
-    businessPurpose: "Address critical single-point-of-failure functions with structured pipelines."
+    status: "modernizado",
+    category: "Competencia e Cobertura",
+    businessPurpose: "Eliminar funcoes sem cobertura por meio de pipelines estruturados."
   },
   {
     id: "training-ojt",
-    title: "Training & OJT",
-    description: "Monitor theoretical training compliance and practical On-the-Job training validation.",
+    title: "Treinamento e OJT",
+    description: "Monitore treinamentos teoricos, validacao pratica OJT e evidencias de competencia.",
     route: "/training-ojt",
-    status: "modernized",
-    category: "Competence & Coverage",
-    businessPurpose: "Ensure workforce operational competence matches quality and compliance guidelines."
+    status: "modernizado",
+    category: "Competencia e Cobertura",
+    businessPurpose: "Garantir competencia operacional alinhada ao SGQ e a ISO 9001."
   },
   {
     id: "knowledge-hub",
-    title: "Knowledge Hub",
-    description: "Track SOP documentation, revision histories, and validated operational knowledge assets.",
+    title: "Base de Conhecimento",
+    description: "Acompanhe documentos, historico de revisao e ativos de conhecimento tecnico.",
     route: "/knowledge-hub",
-    status: "modernized",
-    category: "Risk & Compliance",
-    businessPurpose: "Prevent critical knowledge loss with continuous documentation reviews."
+    status: "modernizado",
+    category: "Risco e Conformidade",
+    businessPurpose: "Prevenir perda de conhecimento critico com revisoes documentadas."
   },
   {
     id: "evidence-center",
-    title: "Evidence Center",
-    description: "Validate compliance proof uploads, expiration statuses, and audit readiness scores.",
+    title: "Central de Evidencias",
+    description: "Valide evidencias objetivas, vencimentos e prontidao para auditoria.",
     route: "/evidence-center",
-    status: "modernized",
-    category: "Risk & Compliance",
-    businessPurpose: "Provide instant auditor-ready compliance tracing for quality controls."
+    status: "modernizado",
+    category: "Risco e Conformidade",
+    businessPurpose: "Oferecer rastreabilidade pronta para auditorias e controles do SGQ."
   },
   {
     id: "vulnerability-analytics",
-    title: "Vulnerability Analytics",
-    description: "Compile live vulnerability indices and risk trends based on live operational gaps.",
+    title: "Analise de Vulnerabilidade",
+    description: "Consolide indices de vulnerabilidade e tendencias de risco por lacuna operacional.",
     route: "/vulnerability-analytics",
-    status: "modernized",
-    category: "Risk & Compliance",
-    businessPurpose: "Unlock proactive workforce risk dashboards with zero guesswork."
+    status: "modernizado",
+    category: "Risco e Conformidade",
+    businessPurpose: "Apoiar decisoes preventivas com indicadores objetivos de risco."
   },
   {
     id: "action-plans",
-    title: "Action Plans",
-    description: "Track corrective and preventive actions linked to workforce vulnerabilities and competence gaps.",
+    title: "Planos de Acao",
+    description: "Acompanhe acoes corretivas e preventivas ligadas a gaps de competencia e continuidade.",
     route: "/action-plans",
-    status: "modernized",
-    category: "Risk & Compliance",
-    businessPurpose: "Solve highlighted compliance issues using structured PDCA status workflows."
+    status: "modernizado",
+    category: "Risco e Conformidade",
+    businessPurpose: "Resolver desvios com fluxo PDCA rastreavel e evidencia objetiva."
   }
 ];

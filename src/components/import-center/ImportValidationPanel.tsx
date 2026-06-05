@@ -22,10 +22,10 @@ export const ImportValidationPanel: React.FC<ImportValidationPanelProps> = ({
         <CheckCircle className="w-8 h-8 text-emerald-400 shrink-0" />
         <div className="space-y-1">
           <h4 className="text-xs font-bold text-white uppercase font-mono tracking-wider">
-            Conformity Compliance Secured
+            Conformidade assegurada
           </h4>
           <p className="text-[10px] text-slate-500 leading-normal">
-            Zero errors or warnings detected. All rows successfully pass strict multitenant schema rules and are eligible to be committed.
+            Nenhum erro ou alerta detectado. Todas as linhas passaram pelas regras multitenant e podem ser publicadas.
           </p>
         </div>
       </div>
@@ -47,7 +47,7 @@ export const ImportValidationPanel: React.FC<ImportValidationPanelProps> = ({
             }`}
           >
             <AlertOctagon className="w-3.5 h-3.5" />
-            Critical Errors ({totalErrors})
+            Erros criticos ({totalErrors})
           </button>
 
           <button
@@ -60,12 +60,12 @@ export const ImportValidationPanel: React.FC<ImportValidationPanelProps> = ({
             }`}
           >
             <AlertTriangle className="w-3.5 h-3.5" />
-            Warnings ({totalWarnings})
+            Alertas ({totalWarnings})
           </button>
         </div>
 
         <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[9px] font-mono text-slate-500 border border-slate-800">
-          Validation Diagnostics
+          Diagnostico da validacao
         </span>
       </div>
 
@@ -82,18 +82,18 @@ export const ImportValidationPanel: React.FC<ImportValidationPanelProps> = ({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-[9px] font-bold text-rose-450 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
-                      Row {err.row}
+                      Linha {err.row}
                     </span>
                     {err.column && (
                       <span className="font-mono text-[9px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-                        Field: {err.column}
+                        Campo: {err.column}
                       </span>
                     )}
                   </div>
                   <p className="text-slate-300 mt-1.5 leading-relaxed">{err.message}</p>
                   {err.value !== undefined && (
                     <p className="text-[10px] text-slate-500 mt-1 font-mono">
-                      Received value: <code className="bg-slate-950 px-1 py-0.5 rounded border border-slate-850">{err.value || "empty"}</code>
+                      Valor recebido: <code className="bg-slate-950 px-1 py-0.5 rounded border border-slate-850">{err.value || "vazio"}</code>
                     </p>
                   )}
                 </div>
@@ -102,7 +102,7 @@ export const ImportValidationPanel: React.FC<ImportValidationPanelProps> = ({
             {totalErrors === 0 && (
               <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
                 <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                <p className="text-[11px] text-slate-400">No critical schema blockers detected.</p>
+                <p className="text-[11px] text-slate-400">Nenhum bloqueio critico de schema detectado.</p>
               </div>
             )}
           </>
@@ -117,18 +117,18 @@ export const ImportValidationPanel: React.FC<ImportValidationPanelProps> = ({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-[9px] font-bold text-amber-450 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                      Row {warn.row}
+                      Linha {warn.row}
                     </span>
                     {warn.column && (
                       <span className="font-mono text-[9px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-                        Field: {warn.column}
+                        Campo: {warn.column}
                       </span>
                     )}
                   </div>
                   <p className="text-slate-300 mt-1.5 leading-relaxed">{warn.message}</p>
                   {warn.value !== undefined && (
                     <p className="text-[10px] text-slate-500 mt-1 font-mono">
-                      Value: <code className="bg-slate-950 px-1 py-0.5 rounded border border-slate-850">{warn.value || "empty"}</code>
+                      Valor: <code className="bg-slate-950 px-1 py-0.5 rounded border border-slate-850">{warn.value || "vazio"}</code>
                     </p>
                   )}
                 </div>
@@ -137,7 +137,7 @@ export const ImportValidationPanel: React.FC<ImportValidationPanelProps> = ({
             {totalWarnings === 0 && (
               <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
                 <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                <p className="text-[11px] text-slate-400">No recommendations or format warnings detected.</p>
+                <p className="text-[11px] text-slate-400">Nenhuma recomendacao ou alerta de formato detectado.</p>
               </div>
             )}
           </>

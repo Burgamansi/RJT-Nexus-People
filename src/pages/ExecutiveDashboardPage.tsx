@@ -45,7 +45,11 @@ import {
   getVulnerabilityFactorRows
 } from "../features/vulnerability-analytics/selectors";
 
-export const ExecutiveDashboardPage: React.FC = () => {
+interface ExecutiveDashboardPageProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export const ExecutiveDashboardPage: React.FC<ExecutiveDashboardPageProps> = ({ onNavigate }) => {
   const { dataset, tenants } = usePeopleDataset();
   const DEMO_EMPLOYEES = dataset.employees;
   const DEMO_UNITS = dataset.units;
@@ -123,7 +127,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
       necessidadeTreinamento: "SIM",
       necessidadeSucessao: "NÃO",
       requisitoISO: "7.2",
-      evidenciaNecessaria: "Upload",
+      evidenciaNecessaria: "Anexo",
       codigoDocumentoUBG: docCode,
       acaoPDCARelacionada: "",
       responsavel: "Supervisor",
@@ -389,13 +393,13 @@ export const ExecutiveDashboardPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <span className="text-[10px] font-mono font-bold tracking-widest text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full uppercase border border-blue-500/20 select-none">
-            PDCA Brain · ISO 9001:2015
+            Inteligencia PDCA | ISO 9001:2015
           </span>
           <h1 className="text-2xl font-extrabold text-white tracking-tight pt-2">
             Dashboard Executivo
           </h1>
           <p className="text-xs text-slate-400">
-            Visão consolidada de conformidade ISO, riscos operacionais, competências e efetividade do ciclo PDCA em tempo real.
+            Visao consolidada de conformidade ISO, riscos operacionais, competencias e efetividade do ciclo PDCA em tempo real.
           </p>
         </div>
 
@@ -422,9 +426,9 @@ export const ExecutiveDashboardPage: React.FC = () => {
         <div className="bg-white/[0.03] rounded-2xl border border-slate-800 p-8 flex flex-col items-center justify-between shadow-xl text-center">
           <div className="space-y-1 w-full text-left border-b border-slate-850 pb-4 mb-4">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-              Organizational Health
+              Saude Organizacional
             </h3>
-            <p className="text-[10px] text-slate-500">Overall risk mitigation index.</p>
+            <p className="text-[10px] text-slate-500">Indice geral de mitigacao de risco.</p>
           </div>
 
           <div className="relative w-44 h-44 flex items-center justify-center">
@@ -465,17 +469,17 @@ export const ExecutiveDashboardPage: React.FC = () => {
                 {organizationalHealthScore}%
               </span>
               <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mt-1 block">
-                Health Score
+                Saude operacional
               </span>
             </div>
           </div>
 
           <div className="w-full text-slate-400 text-xs italic mt-6 border-t border-slate-850 pt-4 leading-relaxed">
             {organizationalHealthScore >= 80
-              ? "✔ High continuity readiness. Quality certifications and backups are fully secured."
+              ? "Alta prontidao de continuidade. Certificacoes e backups estao protegidos."
               : organizationalHealthScore >= 60
-              ? "⚠ Moderate exposure. Address training certification gaps and backup shortages."
-              : "✖ Critical exposure warning. Address Single Point of Failure (SPOF) risks immediately."}
+              ? "Exposicao moderada. Trate gaps de treinamento e cobertura de backup."
+              : "Exposicao critica. Trate imediatamente riscos de ponto unico de falha."}
           </div>
         </div>
 
@@ -483,10 +487,10 @@ export const ExecutiveDashboardPage: React.FC = () => {
         <div className="bg-white/[0.03] rounded-2xl border border-slate-800 p-6 lg:col-span-2 space-y-4 shadow-xl">
           <div className="flex items-center justify-between border-b border-slate-850 pb-3">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-              Aggregated Executive Performance Indices
+              Indicadores Executivos Consolidados
             </h3>
             <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-mono text-slate-500 border border-slate-800">
-              11 Core Scores Hydrated
+              11 indicadores ativos
             </span>
           </div>
 
@@ -496,7 +500,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 1. Workforce Allocation */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">1. Workforce Allocation Score</span>
+                  <span className="text-slate-400">1. Alocacao da forca de trabalho</span>
                   <span className="font-mono text-blue-400 font-bold">{workforceCoverageScore}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
@@ -507,7 +511,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 2. Critical Functions Coverage */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">2. Critical Functions Coverage</span>
+                  <span className="text-slate-400">2. Cobertura de funcoes criticas</span>
                   <span className="font-mono text-[#00A4FF] font-bold">{criticalFunctionsCoverageScore}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
@@ -518,8 +522,8 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 3. Polyvalence Coverage Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">3. Polyvalence Coverage Rating</span>
-                  <span className="font-mono text-amber-400 font-bold">{polyvalenceCoverageScore} index</span>
+                  <span className="text-slate-400">3. Indice de polivalencia</span>
+                  <span className="font-mono text-amber-400 font-bold">{polyvalenceCoverageScore} indice</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
                   <div className="h-full bg-amber-400 rounded-full" style={{ width: `${Math.min(100, polyvalenceCoverageScore * 25)}%` }} />
@@ -529,8 +533,8 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 4. Backup Coverage Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">4. Fully Mapped Backups</span>
-                  <span className="font-mono text-emerald-400 font-bold">{backupCoverageScore} / {backupSuccessionSummary.totalCriticalFunctions} roles</span>
+                  <span className="text-slate-400">4. Backups totalmente mapeados</span>
+                  <span className="font-mono text-emerald-400 font-bold">{backupCoverageScore} / {backupSuccessionSummary.totalCriticalFunctions} funcoes</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(backupCoverageScore / backupSuccessionSummary.totalCriticalFunctions) * 100}%` }} />
@@ -540,8 +544,8 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 5. Succession Readiness Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">5. Succession Pipeline Depth</span>
-                  <span className="font-mono text-purple-400 font-bold">{successionReadinessScore} / {backupSuccessionSummary.totalCriticalFunctions} roles</span>
+                  <span className="text-slate-400">5. Profundidade de sucessao</span>
+                  <span className="font-mono text-purple-400 font-bold">{successionReadinessScore} / {backupSuccessionSummary.totalCriticalFunctions} funcoes</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
                   <div className="h-full bg-purple-500 rounded-full" style={{ width: `${(successionReadinessScore / backupSuccessionSummary.totalCriticalFunctions) * 100}%` }} />
@@ -553,7 +557,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 6. Training Compliance Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">6. Theoretical Training Compliance</span>
+                  <span className="text-slate-400">6. Conformidade de treinamento teorico</span>
                   <span className="font-mono text-emerald-400 font-bold">{trainingComplianceScore}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
@@ -564,7 +568,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 7. OJT Compliance Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">7. Practical OJT Validation Compliance</span>
+                  <span className="text-slate-400">7. Validacao pratica OJT</span>
                   <span className="font-mono text-blue-400 font-bold">{ojtComplianceScore}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
@@ -575,7 +579,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 8. Knowledge Health Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">8. ISO Knowledge Hub Health</span>
+                  <span className="text-slate-400">8. Saude da base de conhecimento ISO</span>
                   <span className="font-mono text-purple-400 font-bold">{knowledgeHealthScore}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
@@ -586,7 +590,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 9. Evidence Readiness Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">9. Evidence Center Audit Readiness</span>
+                  <span className="text-slate-400">9. Prontidao de evidencias para auditoria</span>
                   <span className="font-mono text-[#00A4FF] font-bold">{evidenceReadinessScore}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
@@ -597,7 +601,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 10. Vulnerability Exposure Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">10. Operational Vulnerability Exposure</span>
+                  <span className="text-slate-400">10. Exposicao de vulnerabilidade operacional</span>
                   <span className="font-mono text-rose-400 font-bold">{vulnerabilityExposureScore}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
@@ -608,7 +612,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
               {/* 11. Action Plan Completion Score */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-slate-400">11. Action Plan (PDCA) Completion</span>
+                  <span className="text-slate-400">11. Conclusao dos planos PDCA</span>
                   <span className="font-mono text-emerald-400 font-bold">{actionPlanCompletionScore}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
@@ -634,7 +638,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-amber-500" />
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                    Top Continuity Risks & Action Backlogs
+                    Principais riscos de continuidade e pendencias
                   </h3>
                 </div>
               </div>
@@ -646,12 +650,12 @@ export const ExecutiveDashboardPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-rose-400 shrink-0" />
                       <div>
-                        <p className="font-bold text-white leading-none">Overdue PDCA Actions Backlog</p>
-                        <p className="text-[10px] text-slate-500 mt-1 leading-none">Mitigation target schedules missed</p>
+                        <p className="font-bold text-white leading-none">Acoes PDCA em atraso</p>
+                        <p className="text-[10px] text-slate-500 mt-1 leading-none">Prazos de mitigacao vencidos</p>
                       </div>
                     </div>
                     <span className="text-rose-450 font-mono text-[10px] font-bold bg-rose-500/5 px-2 py-0.5 border border-rose-500/20 rounded">
-                      {actionSummary.overdueActionPlans} active
+                      {actionSummary.overdueActionPlans} ativas
                     </span>
                   </div>
                 )}
@@ -662,12 +666,12 @@ export const ExecutiveDashboardPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
                       <div>
-                        <p className="font-bold text-white leading-none">Single Points of Failure (SPOFs)</p>
-                        <p className="text-[10px] text-slate-500 mt-1 leading-none">Roles with zero qualified backup operators</p>
+                        <p className="font-bold text-white leading-none">Pontos unicos de falha</p>
+                        <p className="text-[10px] text-slate-500 mt-1 leading-none">Funcoes sem backup qualificado</p>
                       </div>
                     </div>
                     <span className="text-rose-450 font-mono text-[10px] font-bold bg-rose-500/5 px-2 py-0.5 border border-rose-500/20 rounded">
-                      {polyvalenceSummary.spofFunctionsCount} active
+                      {polyvalenceSummary.spofFunctionsCount} ativas
                     </span>
                   </div>
                 )}
@@ -678,12 +682,12 @@ export const ExecutiveDashboardPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
                       <div>
-                        <p className="font-bold text-white leading-none">ISO Audit Validation Deficiencies</p>
-                        <p className="text-[10px] text-slate-500 mt-1 leading-none">SOPs without required evidence files</p>
+                        <p className="font-bold text-white leading-none">Deficiencias de validacao ISO</p>
+                        <p className="text-[10px] text-slate-500 mt-1 leading-none">Documentos sem evidencia obrigatoria</p>
                       </div>
                     </div>
                     <span className="text-amber-450 font-mono text-[10px] font-bold bg-amber-500/5 px-2 py-0.5 border border-amber-500/20 rounded">
-                      {evidenceSummary.criticalMissingCount} active
+                      {evidenceSummary.criticalMissingCount} ativas
                     </span>
                   </div>
                 )}
@@ -694,12 +698,12 @@ export const ExecutiveDashboardPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <FileCheck className="w-4 h-4 text-amber-400 shrink-0" />
                       <div>
-                        <p className="font-bold text-white leading-none">On-the-Job Training Gaps</p>
-                        <p className="text-[10px] text-slate-500 mt-1 leading-none">Operators without practical validation</p>
+                        <p className="font-bold text-white leading-none">Gaps de treinamento OJT</p>
+                        <p className="text-[10px] text-slate-500 mt-1 leading-none">Operadores sem validacao pratica</p>
                       </div>
                     </div>
                     <span className="text-amber-450 font-mono text-[10px] font-bold bg-amber-500/5 px-2 py-0.5 border border-amber-500/20 rounded">
-                      {trainingOjtSummary.overdueOjtPlansCount} active
+                      {trainingOjtSummary.overdueOjtPlansCount} ativas
                     </span>
                   </div>
                 )}

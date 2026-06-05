@@ -11,7 +11,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({ entities
   if (!entities || entities.length === 0) {
     return (
       <div className="bg-[#04044A]/20 rounded-2xl border border-slate-800 p-8 text-center text-slate-500 italic text-xs">
-        No valid entities loaded for preview. Correct critical validation errors first.
+        Nenhuma entidade valida carregada para pre-visualizacao. Corrija os erros criticos de validacao.
       </div>
     );
   }
@@ -35,7 +35,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({ entities
         <div className="flex items-center gap-2">
           <Table className="w-4 h-4 text-[#00A4FF]" />
           <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-            Auditable Domain Mapping Preview
+            Previa auditavel do mapeamento
           </h3>
         </div>
 
@@ -50,7 +50,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({ entities
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            Table View
+            Tabela
           </button>
           <button
             type="button"
@@ -62,7 +62,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({ entities
             }`}
           >
             <Code className="w-3.5 h-3.5" />
-            Raw JSON
+            JSON bruto
           </button>
         </div>
       </div>

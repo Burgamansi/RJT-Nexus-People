@@ -8,15 +8,15 @@ interface PeopleIntelligencePageProps {
 }
 
 export const PeopleIntelligencePage: React.FC<PeopleIntelligencePageProps> = ({ onNavigate }) => {
-  const categories = ["Workforce Structure", "Competence & Coverage", "Risk & Compliance"] as const;
+  const categories = ["Estrutura da Forca de Trabalho", "Competencia e Cobertura", "Risco e Conformidade"] as const;
 
   const getCategoryHeaderIcon = (category: string) => {
     switch (category) {
-      case "Workforce Structure":
+      case "Estrutura da Forca de Trabalho":
         return <Layers className="w-5 h-5 text-[#00E7F8]" />;
-      case "Competence & Coverage":
+      case "Competencia e Cobertura":
         return <Award className="w-5 h-5 text-[#00A4FF]" />;
-      case "Risk & Compliance":
+      case "Risco e Conformidade":
         return <Shield className="w-5 h-5 text-emerald-400" />;
     }
   };
@@ -26,10 +26,10 @@ export const PeopleIntelligencePage: React.FC<PeopleIntelligencePageProps> = ({ 
       {/* Intro Header */}
       <div className="space-y-2 max-w-2xl">
         <h1 className="text-2xl font-extrabold text-white tracking-tight">
-          People Intelligence Modules
+          Modulos de Inteligencia Operacional
         </h1>
         <p className="text-xs text-slate-400 leading-relaxed">
-          Explore all 9 modernized analytical packages compiled for the RJT NEXUS PEOPLE platform. Each module runs under strict tenant isolation, providing pure data projections for audits and operations.
+          Navegue pelos modulos gerados a partir do dataset RH/PDCA. Cada widget abre uma frente operacional com isolamento por tenant.
         </p>
       </div>
 
@@ -48,7 +48,7 @@ export const PeopleIntelligencePage: React.FC<PeopleIntelligencePageProps> = ({ 
                   {cat}
                 </h2>
                 <p className="text-[10px] text-slate-500 font-mono">
-                  Modernized analytical sub-modules
+                  Widgets operacionais conectados ao dataset importado
                 </p>
               </div>
             </div>

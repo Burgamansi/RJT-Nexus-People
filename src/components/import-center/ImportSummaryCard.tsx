@@ -15,37 +15,37 @@ interface ImportSummaryCardProps {
 export const ImportSummaryCard: React.FC<ImportSummaryCardProps> = ({ result }) => {
   const metrics = [
     {
-      label: "Total Rows Processed",
+      label: "Linhas processadas",
       value: result.processedCount,
-      desc: "Total CSV records detected",
+      desc: "Registros detectados",
       icon: <FileSpreadsheet className="w-4 h-4 text-[#00E7F8]" />,
       bgColor: "bg-[#00E7F8]/10 border-[#00E7F8]/20"
     },
     {
-      label: "Success / Mapped Rows",
+      label: "Linhas mapeadas",
       value: result.successCount,
-      desc: "Valid entities parsed to domain",
+      desc: "Entidades validas no dominio",
       icon: <CheckCircle className="w-4 h-4 text-emerald-400" />,
       bgColor: "bg-emerald-500/10 border-emerald-500/20"
     },
     {
-      label: "Validation Errors",
+      label: "Erros de validacao",
       value: result.errors.length,
-      desc: "Critical issues skipping rows",
+      desc: "Problemas criticos por linha",
       icon: <AlertOctagon className="w-4 h-4 text-rose-500" />,
       bgColor: "bg-rose-500/10 border-rose-500/20"
     },
     {
-      label: "Validation Warnings",
+      label: "Alertas de validacao",
       value: result.warnings.length,
-      desc: "Non-blocking format recommendations",
+      desc: "Recomendacoes nao bloqueantes",
       icon: <AlertTriangle className="w-4 h-4 text-amber-500" />,
       bgColor: "bg-amber-500/10 border-amber-500/20"
     },
     {
-      label: "Processing Duration",
+      label: "Tempo de processamento",
       value: `${result.elapsedMs} ms`,
-      desc: "Pure analytical parsing speed",
+      desc: "Velocidade de analise",
       icon: <Hourglass className="w-4 h-4 text-purple-400" />,
       bgColor: "bg-purple-500/10 border-purple-500/20"
     }
