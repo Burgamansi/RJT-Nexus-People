@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { RJT_COLORS } from "../styles/rjtColors";
 import { validateAndImportData, generateImportReport, ImportValidationResult } from "../services/robustImportService";
+import { convertImportedDataToDataset, saveDatasetToLocalStorage } from "../services/importDataConverter";
 import { ImportDropzone } from "../components/import-center/ImportDropzone";
 import * as XLSX from 'xlsx';
 
@@ -42,9 +43,18 @@ export const ImportCenterPage: React.FC<ImportCenterPageProps> = ({ onNavigate }
       const result = validateAndImportData(workbook);
       setImportResult(result);
 
-      // Log para debug
-      console.log("Import Result:", result);
+      // Se validação bem-sucedida, converter e salvar dados
+      if (result.success && result.data.length > 0) {
+        const dataset = convertImportedDataToDataset(
+          result,
+          selectedTenant,
+          tenants.find(t => t.id === selectedTenant)?.name || "UNIÃO BAG"
+        );
+        saveDatasetToLocalStorage(dataset);
+        console.log("✅ Dados importados e salvos com sucesso!");
+      }
     } catch (error) {
+      console.error("Erro ao processar arquivo:", error);
       setImportResult({
         success: false,
         totalRows: 0,
